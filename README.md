@@ -54,7 +54,11 @@ The Libraries:
 ### Usage
 
 ```bash
+# basic
 $ julia -O3 -t 8 main.jl -i [input image] -o [output image]
+
+# suggested
+$ julia -O3 -t 8 main.jl -s 720 --steps 2000 -i [input image] -o [output image]
 
 # alter the image resolution
 $ julia -O3 -t 8 main.jl -s 800 -i [input image] -o [output image]
@@ -88,8 +92,29 @@ optional arguments:
 ```
 
 > keep the number of pins bellow 250 and the image size bellow 1000.
+> number of iteration steps is dependent on the image size. For size between 500 and 800, 2000 iteration is more than enough.
 
 ### Gallery
+
+<p align="center">
+  <img src="examples/david_02.png" alt="David by Michelangelo" width="500px" />
+</p>
+
+<p align="center">
+  <img src="examples/einstein.png" alt="David by Michelangelo" width="500px" />
+</p>
+
+#### RGB Mode
+
+<p align="center">
+  <img src="examples/dog.png" alt="Dog" width="500px" />
+</p>
+
+<p align="center">
+  <img src="examples/david_rgb.png" alt="David by Michelangelo" width="500px" />
+</p>
+
+---
 
 ### TODO
 
