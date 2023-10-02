@@ -1,7 +1,6 @@
 using ArgParse
 using Base
 using Base.Threads
-using Combinatorics
 using Dates
 using Images
 using Logging
@@ -15,8 +14,9 @@ function main()
     args = parse_cmd()
 
     # verbose mode should use debug log level log level
-    loglevel = args["verbose"] ? Logging.Debug : Logging.Info
-    logger = SimpleLogger(stdout, loglevel)
+    if args["verbose"]
+        ENV["JULIA_DEBUG"] = Main
+    end
 
     global args
 
@@ -25,9 +25,7 @@ function main()
         inp = load_image(args["input"])
 
         @info "Running gray scale algorithm..." now()
-        with_logger(logger) do
-            out = run(inp)
-        end
+        out = run(inp)
 
         @info "Saving final output image to:" args["output"] now()
         out = Gray.(complement.(out))
@@ -37,9 +35,7 @@ function main()
         rgb = load_rgb_image(args["input"])
 
         @info "Running RGB algorithm..." now()
-        with_logger(logger) do
-            rgb = [run(color) for color in rgb]
-        end
+        rgb = [run(color) for color in rgb]
 
         @info "Saving final output image to:" args["output"] now()
         out = complement.(RGB.(rgb...))
@@ -136,7 +132,7 @@ function run(input::Image)
 
     @debug "Starting algorithm..." now()
     output = zeros(N0f8, SIZE, SIZE)
-    pin = pins[1]
+    pin = rand(pins)
 
     for step = 1:STEPS
         if step % 20 == 0
@@ -240,7 +236,7 @@ function select_best_chord(img::Image, curves::Vector{Image})::Tuple{Float64,Int
     errorfunc = c -> sum(abs2.(cimg .- float64.(c)))
     # most computational intensive part
     errors = zeros(Float64, length(curves))
-    Threads.@threads for i in 1:length(curves)
+    @threads for i in 1:length(curves)
         @inbounds errors[i] = errorfunc(curves[i])
     end
     findmin(errors)
