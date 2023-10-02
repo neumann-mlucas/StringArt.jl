@@ -1,22 +1,24 @@
 ## StringArt.jl
 
-![David by Michelangelo](examples/david.png)
+<div style="text-align:center;">
+  <img src="examples/david.png" alt="David by Michelangelo" width="300px" />
+</div>
 
 This script implements a simplified version of the [String Art](https://en.wikipedia.org/wiki/String_art) greedy algorithm. Given an image, it attempts to create a similar representation using a single thread wound around a circle of nails, effectively constructing an image using only lines. This technique is probably most well-know for the artistic works of [Petros Vrllis](https://www.saatchiart.com/vrellis).
 
-Most implementations often require high-contrast images, and still the results can vary significantly from one image to another. In this version, I've tweaked the algorithm parameters to enhance the contrast and detail in the final output. While this adjustment impacts performance, it remains usable.
+Most implementations often require high-contrast images, and still the results can vary significantly from one image to another. In this version, I've tweaked the algorithm parameters to **enhance the contrast and detail in the final output**. While this adjustment impacts performance, it remains usable.
 
-Additionally, the script features a command-line interface (CLI) with various parameters and option flags and a _RGB color mode_. Feel free to explore these options to customize the output according to your preferences.
+Additionally, the script features a command-line interface (CLI) with various parameters and option flags and a **RGB color mode**. Feel free to explore these options to customize the output according to your preferences.
 
 ### Algorithm
 
-1. Setup:
+1. **Setup:**
 
 - Load the source image and create an empty output image.
 - Calculate pin positions and all possible lines between 2 pins.
 - Compute all possible line images.
 
-2. Iteration Step:
+2. **Iteration Step:**
 
 - Choose a pin (P).
 - Load all possible lines connecting P to the other pins in the circle.
@@ -25,19 +27,19 @@ Additionally, the script features a command-line interface (CLI) with various pa
 - Update the output image (add L) and the source image (subtract L).
 - Set the pin to be the other pin of L.
 
-_Line Generating Function:_
+**Line Generating Function:**
 One-pixel-width lines (or any square/stair-like lines) do not yield good results. Experimentation with different line functions is essential here. I ended up choosing to apply the Gaussian Blur Kernel to the line. It's simple, and it works (also, it eliminates the need to fine-tune other parameters).
 
-_Line Pixel Strength:_
+**Line Pixel Strength:**
 Opt for low line pixel values to create nuanced shades of grey in the output image.
 
-_Choose Pin:_
+**Choose Pin:**
 Randomizing the pin position periodically (every N steps) tends to give better results.
 
-_Error Function:_
+**Error Function:**
 Arguably the most critical part of the algorithm. You should minimize the error here and not any other metric (I lost a lot of time doing that...). The best function that I found was the squared difference between the source image and the line (but the performance takes a considerable hit here).
 
-_Excluding Already Visited Lines:_
+**Excluding Already Visited Lines:**
 While excluding used lines each iteration improves performance, it results in a more diffuse and noisy image. In this implementation, visited lines are retained. If you prefer the noisy style, just uncomment the lines with filter!.
 
 ### Requirements
