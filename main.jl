@@ -1,10 +1,10 @@
 using ArgParse
 using Base
 using Base.Threads
-using Combinatorics
 using Dates
 using Images
 using Logging
+using Memoize
 
 const Point = ComplexF64
 const Chord = Pair{Point}
@@ -126,11 +126,6 @@ function run(input::Image)
     pins = gen_pins(PINS, SIZE)
     pin2chords = Dict(p => gen_chords(p, pins) for p in pins)
 
-    @debug "Generating chord images..." now()
-    allchords = gen_all_chords(pins)
-    chord2img = Dict(c => gen_img(c) for c in allchords)
-    @debug "All chords generated" now() length(allchords)
-
     @debug "Starting algorithm..." now()
     output = zeros(N0f8, SIZE, SIZE)
     pin = rand(pins)
@@ -142,7 +137,7 @@ function run(input::Image)
         end
 
         chords = pin2chords[pin]
-        imgs = [chord2img[ch] for ch in chords]
+        imgs = gen_img.(chords)
 
         if length(imgs) == 0
             break
@@ -180,18 +175,10 @@ function gen_pins(pins::Int, size::Int)::Vector{Point}
 end
 
 function gen_chords(p::Point, points::Vector{Point})::Vector{Chord}
+    # exclude small chords
+    valid_distance = (p,q)->(abs(p - q) > args["size"] * 0.1)
     # line connecting a point  to all other neighbors / canvas pins
     [to_chord(p, q) for q in points if valid_distance(p, q)]
-end
-
-function gen_all_chords(points::Vector{Point})::Vector{Chord}
-    # generate all possible chords (combinations of two points in the circle)
-    [to_chord(p, q) for (p, q) in combinations(points, 2) if valid_distance(p, q)]
-end
-
-function valid_distance(p::Point, q::Point)::Bool
-    # exclude small chords
-    abs(p - q) > args["size"] * 0.1
 end
 
 function to_chord(p::Point, q::Point)::Chord
@@ -200,7 +187,7 @@ function to_chord(p::Point, q::Point)::Chord
     return (p => q)
 end
 
-function gen_img(chord::Chord)::Image
+@memoize Dict function gen_img(chord::Chord)::Image
     # calculate the linear and angular coefficient of line (b-a)
     size = args["size"]
     line_strength = args["line-strength"]

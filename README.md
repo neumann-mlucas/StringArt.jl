@@ -16,12 +16,11 @@ Additionally, the script features a command-line interface (CLI) with various pa
 
 - Load the source image and create an empty output image.
 - Calculate pin positions and all possible lines between 2 pins.
-- Compute all possible line images.
 
 2. **Iteration Step:**
 
 - Choose a pin (P).
-- Load all possible lines connecting P to the other pins in the circle.
+- Create all possible lines connecting P to the other pins in the circle.
 - Calculate the error between each of the lines and the source image.
 - Find the line (L) that gives the minimum error.
 - Update the output image (add L) and the source image (subtract L).
@@ -47,9 +46,9 @@ While excluding used lines each iteration improves performance, it results in a 
 The Libraries:
 
 - ArgParse
-- Combinatorics
 - Images
 - Logging
+- Memoize
 
 ### Usage
 
@@ -120,7 +119,7 @@ optional arguments:
 
 - [ ] GIF mode
 - [ ] take a list of files as inputs
-- [ ] Optimize (or cache) setup
+- [x] Optimize (or cache) setup
 - [ ] Eliminate graphical bug (dot line at the center)
-- [ ] more memory efficient implementation (use sparse matrix or just don't pre-compute chords)
-- [ ] version for the GPU
+- [ ] make it more memory efficient (sparse matrix doesn't work)
+- [ ] port the code to the GPU
