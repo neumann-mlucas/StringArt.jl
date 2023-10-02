@@ -1,7 +1,7 @@
 ## StringArt.jl
 
 <p align="center">
-  <img src="examples/david.png" alt="David by Michelangelo" width="300px" />
+  <img src="examples/david_01.png" alt="David by Michelangelo" width="300px" />
 </p>
 
 This script implements a simplified version of the [String Art](https://en.wikipedia.org/wiki/String_art) greedy algorithm. Given an image, it attempts to create a similar representation using a single thread wound around a circle of nails, effectively constructing an image using only lines. This technique is probably most well-know for the artistic works of [Petros Vrllis](https://www.saatchiart.com/vrellis).
