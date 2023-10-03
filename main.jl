@@ -114,7 +114,8 @@ function crop_to_square(image::Matrix)::Matrix{RGB{N0f8}}
     start_w = div(width - crop_size, 2) + 1
     # Crop the image to a square shape
     cropped_img = zeros(RGB{N0f8}, crop_size, crop_size)
-    cropped_img .= image[start_h:start_h+crop_size-1, start_w:start_w+crop_size-1]
+    cropped_img .=
+        image[start_h:(start_h + crop_size - 1), start_w:(start_w + crop_size - 1)]
     return cropped_img
 end
 
@@ -154,8 +155,8 @@ function run(input::Image)
 
         # old = pin
         pin = chord.first == pin ? chord.second : chord.first
-        
-        # excludes current chord from map 
+
+        # excludes current chord from map
         # filter!(p -> p != chord, pin2chords[old])
         # filter!(p -> p != chord, pin2chords[pin])
     end
@@ -176,7 +177,7 @@ end
 
 function gen_chords(p::Point, points::Vector{Point})::Vector{Chord}
     # exclude small chords
-    valid_distance = (p,q)->(abs(p - q) > args["size"] * 0.1)
+    valid_distance = (p, q) -> (abs(p - q) > args["size"] * 0.1)
     # line connecting a point  to all other neighbors / canvas pins
     [to_chord(p, q) for q in points if valid_distance(p, q)]
 end
@@ -224,7 +225,7 @@ function select_best_chord(img::Image, curves::Vector{Image})::Tuple{Float64,Int
     errorfunc = c -> sum(abs2.(cimg .- float64.(c)))
     # most computational intensive part
     errors = zeros(Float64, length(curves))
-    @threads for i in 1:length(curves)
+    @threads for i = 1:length(curves)
         @inbounds errors[i] = errorfunc(curves[i])
     end
     findmin(errors)

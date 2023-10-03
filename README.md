@@ -101,21 +101,21 @@ optional arguments:
 ### Gallery
 
 <p align="center">
-  <img src="examples/david_02.png" alt="David by Michelangelo" width="500px" />
+  <img src="examples/david_02.png" alt="David by Michelangelo" width="400px" />
 </p>
 
 <p align="center">
-  <img src="examples/einstein.png" alt="Albert Einstein" width="500px" />
+  <img src="examples/einstein.png" alt="Albert Einstein" width="400px" />
 </p>
 
 #### RGB Mode
 
 <p align="center">
-  <img src="examples/dog.png" alt="Dog" width="500px" />
+  <img src="examples/venus.png" alt="Birth of Venus" width="400px" />
 </p>
 
 <p align="center">
-  <img src="examples/venus.png" alt="Birth of Venus" width="500px" />
+  <img src="examples/dog.png" alt="Dog" width="400px" />
 </p>
 
 ---
