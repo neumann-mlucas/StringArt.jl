@@ -1,3 +1,5 @@
+module StringArt
+
 using ArgParse
 using Base
 using Base.Threads
@@ -150,8 +152,8 @@ function run(input::Image)
         @debug "Error calculated" now() idx, error
 
         @debug "Updating images and position..." now()
-        input = add_imgs(input, img)
-        output = add_imgs(output, img)
+        add_imgs!(input, img)
+        add_imgs!(output, img)
 
         # old = pin
         pin = chord.first == pin ? chord.second : chord.first
@@ -205,8 +207,8 @@ end
     y = floor.(Int, y)
 
     m = zeros(Gray{N0f8}, size, size)
-    for (xi, yi) in zip(x, y)
-        m[xi, yi] = line_strength
+    @inbounds @simd for i = 1:size
+        m[x[i], y[i]] = line_strength
     end
     # gaussian filter to smooth the line
     imfilter(m, Kernel.gaussian(1))
@@ -219,22 +221,23 @@ function get_coefficients(p::Point, q::Point)::Tuple{Float64,Float64}
     return (a, b)
 end
 
-function select_best_chord(img::Image, curves::Vector{Image})::Tuple{Float64,Int}
-    # apply error function to all images
-    cimg = float64.(complement.(img))
-    errorfunc = c -> sum(abs2.(cimg .- float64.(c)))
-    # most computational intensive part
-    errors = zeros(Float64, length(curves))
+function select_best_chord(img::Image, curves::Vector{Image})::Tuple{Float32,Int}
+    # apply error function to all images and find the minium
+    cimg = complement.(img)
+    errors = zeros(Float32, length(curves))
     @threads for i = 1:length(curves)
-        @inbounds errors[i] = errorfunc(curves[i])
+        errors[i] = Images.ssd(cimg, curves[i]) 
     end
     findmin(errors)
 end
 
-function add_imgs(img::Image, curve::Image)::Image
+function add_imgs!(img::Image, curve::Image)::Image
+    idx = [i for i in eachindex(curve) if curve[i] != 0]
     # add images clipping values outside the range 0<x<1 (not a valid color)
-    m = float64.(img) .+ float64.(curve)
-    @. Gray{N0f8}(clamp(m, 0.0, 1.0))
+    @inbounds @simd for i in idx
+        img[i] = clamp(float32(img[i]) + float32(curve[i]), 0.0, 1.0)
+    end
+    img
 end
 
 function log_step(step::Int, out::Image)
@@ -246,4 +249,6 @@ function log_step(step::Int, out::Image)
     end
 end
 
-main()
+end 
+
+StringArt.main()
