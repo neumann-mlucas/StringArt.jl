@@ -10,6 +10,10 @@ Most implementations often require high-contrast images, and still the results c
 
 Additionally, the script features a command-line interface (CLI) with various parameters and option flags and a **RGB color mode**. Feel free to explore these options to customize the output according to your preferences.
 
+**Useful Resources:**
+
+- [The Mathematics of String Art Video](https://www.youtube.com/watch?v=WGccIFf6MF8)
+
 ### Algorithm
 
 1. **Setup:**
@@ -21,7 +25,7 @@ Additionally, the script features a command-line interface (CLI) with various pa
 
 - Choose a pin (P).
 - Create all possible lines connecting P to the other pins in the circle.
-- Calculate the error between each of the lines and the source image.
+- Calculate the error between each lines and the source image.
 - Find the line (L) that gives the minimum error.
 - Update the output image (add L) and the source image (subtract L).
 - Set the pin to be the other pin of L.
@@ -30,7 +34,7 @@ Additionally, the script features a command-line interface (CLI) with various pa
 One-pixel-width lines (or any square/stair-like lines) do not yield good results. Experimentation with different line functions is essential here. I ended up choosing to apply the Gaussian Blur Kernel to the line. It's simple, and it works (also, it eliminates the need to fine-tune other parameters).
 
 **Line Pixel Strength:**
-Opt for low line pixel values to create nuanced shades of grey in the output image.
+Opt for low line pixel values to create nuanced shades of gray in the output image.
 
 **Choose Pin:**
 Randomizing the pin position periodically (every N steps) tends to give better results.
@@ -39,7 +43,7 @@ Randomizing the pin position periodically (every N steps) tends to give better r
 Arguably the most critical part of the algorithm. You should minimize the error here and not any other metric (I lost a lot of time doing that...). The best function that I found was the squared difference between the source image and the line (but the performance takes a considerable hit here).
 
 **Excluding Already Visited Lines:**
-While excluding used lines each iteration improves performance, it results in a more diffuse and noisy image. In this implementation, visited lines are retained. If you prefer the noisy style, just uncomment the lines with filter!.
+While excluding used lines each iteration improves performance, it results in a more diffuse and noisy image. In this implementation, visited lines are retained. If you prefer the noisy style, just uncomment the lines with `filter!`.
 
 ### Requirements
 
@@ -91,7 +95,8 @@ optional arguments:
 ```
 
 > keep the number of pins bellow 250 and the image size bellow 1000.
-> number of iteration steps is dependent on the image size. For size between 500 and 800, 2000 iteration is more than enough.
+
+> the number of iteration steps is dependent on the image size. For size between 500 and 800, 2000 iteration is more than enough.
 
 ### Gallery
 
@@ -100,7 +105,7 @@ optional arguments:
 </p>
 
 <p align="center">
-  <img src="examples/einstein.png" alt="David by Michelangelo" width="500px" />
+  <img src="examples/einstein.png" alt="Albert Einstein" width="500px" />
 </p>
 
 #### RGB Mode
@@ -110,7 +115,7 @@ optional arguments:
 </p>
 
 <p align="center">
-  <img src="examples/david_rgb.png" alt="David by Michelangelo" width="500px" />
+  <img src="examples/venus.png" alt="Birth of Venus" width="500px" />
 </p>
 
 ---
@@ -120,6 +125,6 @@ optional arguments:
 - [ ] GIF mode
 - [ ] take a list of files as inputs
 - [x] Optimize (or cache) setup
-- [ ] Eliminate graphical bug (dot line at the center)
+- [ ] Eliminate graphical bug (black dots at the center)
 - [ ] make it more memory efficient (sparse matrix doesn't work)
 - [ ] port the code to the GPU
