@@ -22,23 +22,23 @@ function main()
     global args
 
     if !args["color"]
-        @info "Loading input image..." args["input"]
+        @info "Loading input image: '$(args["input"])'"
         inp = load_image(args["input"])
 
         @info "Running gray scale algorithm..." now()
         out = run(inp)
 
-        @info "Saving final output image to:" args["output"] now()
+        @info "Saving final output image to: '$(args["output"])'" now()
         out = Gray.(complement.(out))
         save(args["output"] * ".png", out)
     else
-        @info "Loading input image..." args["input"]
+        @info "Loading input image '$(args["input"])'"
         rgb = load_rgb_image(args["input"])
 
         @info "Running RGB algorithm..." now()
         rgb = [run(color) for color in rgb]
 
-        @info "Saving final output image to:" args["output"] now()
+        @info "Saving final output image to: '$(args["output"])'" now()
         out = complement.(RGB.(rgb...))
         save(args["output"] * ".png", out)
     end
