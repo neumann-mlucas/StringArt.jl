@@ -4,10 +4,10 @@ using ArgParse
 using Base
 using Base.Threads
 using Dates
+using FileIO
 using Images
 using Logging
 using Memoize
-using FileIO
 
 const Point = ComplexF64
 const Chord = Pair{Point}
@@ -259,7 +259,6 @@ function log_step(step::Int, out::Image)
     dt = Dates.format(now(), "HH:MM:SS")
     @info "$dt | Step: $step"
     if isdefined(Main.StringArt, :args) & args["gif"]
-        println(args["gif-count"])
         img = complement.(out)
         args["gif-frames"][:, :, args["gif-count"]] .= img
         args["gif-count"] += 1

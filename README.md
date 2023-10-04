@@ -8,7 +8,7 @@ This script implements a simplified version of the [String Art](https://en.wikip
 
 Most implementations often require high-contrast images, and still the results can vary significantly from one image to another. In this version, I've tweaked the algorithm parameters to **enhance the contrast and detail in the final output**. While this adjustment impacts performance, it remains usable.
 
-Additionally, the script features a command-line interface (CLI) with various parameters and option flags and a **RGB color mode**. Feel free to explore these options to customize the output according to your preferences.
+Additionally, the script features a command-line interface (CLI) with various tweakable parameters, option flags, **RGB color mode** and you can also save the **GIF animation** with easy. Feel free to explore these options to customize the output according to your preferences, if you want to reuse the code or call it somewhere else, you should look at `StringArt.run`.
 
 **Useful Resources:**
 
@@ -69,29 +69,30 @@ $ julia -O3 -t 8 main.jl -s 800 -i [input image] -o [output image]
 # RGB color mode
 $ julia -O3 -t 8 main.jl --color -i [input image] -o [output image]
 
-# Saves output image for each iteration
-$ julia -O3 -t 8 main.jl --verbose -i [input image] -o [output image]
+# Saves GIF output
+$ julia -O3 -t 8 main.jl --gif -i [input image] -o [output image]
 ```
 
 ### Parameters
 
 ```bash
 usage: main.jl -i INPUT [-o OUTPUT] [-s SIZE] [-n PINS]
-               [--steps STEPS] [--line-strength LINE-STRENGTH]
-               [--color] [--verbose] [-h]
+               [--steps STEPS] [--gif] [--color] [--verbose] [-h]
 
 optional arguments:
-  -i, --input INPUT     input image path
-  -o, --output OUTPUT   output image path whiteout extension (default: "output")
-  -s, --size SIZE       output image size in pixels (type: Int64, default: 512)
-  -n, --pins PINS       number of pins to use in canvas (type: Int64, default: 180)
-  --steps STEPS         number of algorithm iterations (type: Int64, default: 1000)
-  --line-strength LINE-STRENGTH
-                        pixel value for line for a point in one line
-                        (type: Float64, default: 0.25)
-  --color               RGB mode
-  --verbose             verbose mode
-  -h, --help            show this help message and exit
+  -i, --input INPUT    input image path
+  -o, --output OUTPUT  output image path whiteout extension (default:
+                       "output")
+  -s, --size SIZE      output image size in pixels (type: Int64,
+                       default: 512)
+  -n, --pins PINS      number of pins to use in canvas (type: Int64,
+                       default: 180)
+  --steps STEPS        number of algorithm iterations (type: Int64,
+                       default: 1000)
+  --gif                Save output as a GIF
+  --color              RGB mode
+  --verbose            verbose mode
+  -h, --help           show this help message and exit
 ```
 
 > keep the number of pins bellow 250 and the image size bellow 1000.
@@ -122,7 +123,7 @@ optional arguments:
 
 ### TODO
 
-- [ ] GIF mode
+- [x] GIF mode
 - [ ] take a list of files as inputs
 - [x] Optimize (or cache) setup
 - [ ] Eliminate graphical bug (black dots at the center)
