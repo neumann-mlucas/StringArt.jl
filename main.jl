@@ -7,6 +7,7 @@ using Dates
 using Images
 using Logging
 using Memoize
+using FileIO
 
 const Point = ComplexF64
 const Chord = Pair{Point}
@@ -23,26 +24,44 @@ function main()
 
     global args
 
+    pins, size, steps = args["pins"], args["size"], args["steps"]
+    input, output = args["input"], args["output"]
+
+    if args["gif"]
+        frames = (args["color"]) ? 3 * div(steps, 20) : div(steps, 20)
+        args["gif-frames"] = Array{N0f8}(undef, size, size, frames)
+        args["gif-count"] = 1
+    end
+
     if !args["color"]
-        @info "Loading input image: '$(args["input"])'"
-        inp = load_image(args["input"])
+        @info "Loading input image: '$input'"
+        inp = load_image(input, size)
 
         @info "Running gray scale algorithm..." now()
-        out = run(inp)
+        out = run(inp, pins, size, steps)
 
-        @info "Saving final output image to: '$(args["output"])'" now()
+        @info "Saving final output image to: '$output'" now()
         out = Gray.(complement.(out))
-        save(args["output"] * ".png", out)
+        save(output * ".png", out)
     else
-        @info "Loading input image '$(args["input"])'"
-        rgb = load_rgb_image(args["input"])
+        @info "Loading input image: '$input'"
+        rgb = load_rgb_image(input, size)
 
         @info "Running RGB algorithm..." now()
-        rgb = [run(color) for color in rgb]
+        rgb = [run(color, pins, size, steps) for color in rgb]
 
-        @info "Saving final output image to: '$(args["output"])'" now()
+        @info "Saving final output image to: '$output'" now()
         out = complement.(RGB.(rgb...))
-        save(args["output"] * ".png", out)
+        save(output * ".png", out)
+    end
+
+    if args["gif"] & args["color"]
+        frames, n = args["gif-frames"], div(args["gif-count"] - 1, 3)
+        sr, sg, sb = (1:n, (n + 1):(2 * n), (2 * n + 1):(3 * n))
+        frames = RGB.(frames[:, :, sr], frames[:, :, sg], frames[:, :, sb])
+        save(output * ".gif", frames, fps = 5)
+    elseif args["gif"]
+        save(output * ".gif", args["gif-frames"], fps = 5)
     end
 end
 
@@ -71,10 +90,9 @@ function parse_cmd()
         help = "number of algorithm iterations"
         arg_type = Int
         default = 1000
-        "--line-strength"
-        help = "pixel value for line for a point in one line"
-        arg_type = Float64
-        default = 0.25
+        "--gif"
+        help = "Save output as a GIF"
+        action = :store_true
         "--color"
         help = "RGB mode"
         action = :store_true
@@ -85,29 +103,31 @@ function parse_cmd()
     parse_args(parser)
 end
 
-function load_image(image_path::String)::Image
+# TODO: enhance image contrast here
+function load_image(image_path::String, size::Int)::Image
     # Read the image and convert it to an array
     @assert isfile(image_path)
     img = Images.load(image_path)
     # Resize the image to the specified dimensions
     img = crop_to_square(img)
-    img = Images.imresize(img, args["size"], args["size"])
+    img = Images.imresize(img, size, size)
     # Convert the Image to gray scale
     N0f8.(Gray.(img))
 end
 
-function load_rgb_image(image_path::String)::Tuple{Image,Image,Image}
+# TODO: enhance image contrast here
+function load_rgb_image(image_path::String, size::Int)::Tuple{Image,Image,Image}
     # Read the image and convert it to an array
     @assert isfile(image_path)
     img = Images.load(image_path)
     # Resize the image to the specified dimensions
     img = crop_to_square(img)
-    img = Images.imresize(img, args["size"], args["size"])
+    img = Images.imresize(img, size, size)
     # Convert the Image to gray scale
     red.(img), green.(img), blue.(img)
 end
 
-function crop_to_square(image::Matrix)::Matrix{RGB{N0f8}}
+function crop_to_square(image::Matrix{RGB{N0f8}})::Matrix{RGB{N0f8}}
     # Calculate the size of the square
     height, width = size(image)
     crop_size = min(height, width)
@@ -121,30 +141,27 @@ function crop_to_square(image::Matrix)::Matrix{RGB{N0f8}}
     return cropped_img
 end
 
-function run(input::Image)
-    PINS, SIZE = args["pins"], args["size"]
-    STEPS = args["steps"]
-
+function run(input::Image, pins::Int, size::Int, steps::Int)::Image
     @debug "Generating chords and pins positions" now()
-    pins = gen_pins(PINS, SIZE)
-    pin2chords = Dict(p => gen_chords(p, pins) for p in pins)
+    pins = gen_pins(pins, size)
+    pin2chords = Dict(p => gen_chords(p, pins, size) for p in pins)
 
     @debug "Starting algorithm..." now()
-    output = zeros(N0f8, SIZE, SIZE)
+    output = zeros(N0f8, size, size)
     pin = rand(pins)
 
-    for step = 1:STEPS
+    for step = 1:steps
         if step % 20 == 0
             pin = rand(pins)
             log_step(step, output)
         end
 
         chords = pin2chords[pin]
-        imgs = gen_img.(chords)
+        imgs = gen_img.(chords, size)
 
-        if length(imgs) == 0
-            break
-        end
+        # if length(imgs) == 0
+        #     break
+        # end
 
         @debug "Calculating error in chords..." now()
         error, idx = select_best_chord(input, imgs)
@@ -177,9 +194,9 @@ function gen_pins(pins::Int, size::Int)::Vector{Point}
     round.(coords .+ center) |> unique
 end
 
-function gen_chords(p::Point, points::Vector{Point})::Vector{Chord}
+function gen_chords(p::Point, points::Vector{Point}, size::Int)::Vector{Chord}
     # exclude small chords
-    valid_distance = (p, q) -> (abs(p - q) > args["size"] * 0.1)
+    valid_distance = (p, q) -> (abs(p - q) > size * 0.1)
     # line connecting a point  to all other neighbors / canvas pins
     [to_chord(p, q) for q in points if valid_distance(p, q)]
 end
@@ -190,10 +207,8 @@ function to_chord(p::Point, q::Point)::Chord
     return (p => q)
 end
 
-@memoize Dict function gen_img(chord::Chord)::Image
+@memoize Dict function gen_img(chord::Chord, size::Int)::Image
     # calculate the linear and angular coefficient of line (b-a)
-    size = args["size"]
-    line_strength = args["line-strength"]
 
     # calculate line / chord points
     p, q = chord
@@ -207,8 +222,8 @@ end
     y = floor.(Int, y)
 
     m = zeros(Gray{N0f8}, size, size)
-    @inbounds @simd for i = 1:size
-        m[x[i], y[i]] = line_strength
+    @inbounds @simd for i in eachindex(x)
+        m[x[i], y[i]] = 0.25 # line_strength
     end
     # gaussian filter to smooth the line
     imfilter(m, Kernel.gaussian(1))
@@ -225,8 +240,8 @@ function select_best_chord(img::Image, curves::Vector{Image})::Tuple{Float32,Int
     # apply error function to all images and find the minium
     cimg = complement.(img)
     errors = zeros(Float32, length(curves))
-    @threads for i = 1:length(curves)
-        errors[i] = Images.ssd(cimg, curves[i]) 
+    @threads for i in eachindex(curves)
+        errors[i] = Images.ssd(cimg, curves[i])
     end
     findmin(errors)
 end
@@ -243,12 +258,14 @@ end
 function log_step(step::Int, out::Image)
     dt = Dates.format(now(), "HH:MM:SS")
     @info "$dt | Step: $step"
-    if args["verbose"]
-        filename = args["output"] * "_" * lpad("$step", 4, '0') * ".png"
-        save(filename, complement.(out))
+    if isdefined(Main.StringArt, :args) & args["gif"]
+        println(args["gif-count"])
+        img = complement.(out)
+        args["gif-frames"][:, :, args["gif-count"]] .= img
+        args["gif-count"] += 1
     end
 end
 
-end 
+end
 
 StringArt.main()
