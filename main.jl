@@ -13,6 +13,17 @@ const Point = ComplexF64
 const Chord = Pair{Point}
 const Image = Matrix{N0f8}
 
+const DefaultArgs = Dict{String,Int}((
+    "blur" => 1,
+    "line-strength" => 25,
+    "pins" => 180,
+    "size" => 500,
+    "steps" => 1000,
+    "gif" => false,
+    "color" => false,
+))
+
+
 function main()
     # parse command line arguments
     args = parse_cmd()
@@ -22,47 +33,42 @@ function main()
         ENV["JULIA_DEBUG"] = Main
     end
 
-    global args
-
-    pins, size, steps = args["pins"], args["size"], args["steps"]
+    # use command line options to define algorithm parameters
+    args = merge(DefaultArgs, args)
     input, output = args["input"], args["output"]
 
     if args["gif"]
-        frames = (args["color"]) ? 3 * div(steps, 20) : div(steps, 20)
-        args["gif-frames"] = Array{N0f8}(undef, size, size, frames)
-        args["gif-count"] = 1
+        frames = (args["color"]) ? 3 * div(args["steps"], 20) : div(args["steps"], 20)
+        global gif_frames = Array{N0f8}(undef, args["size"], args["size"], frames)
+        global gif_count = 1
     end
 
     if !args["color"]
         @info "Loading input image: '$input'"
-        inp = load_image(input, size)
+        inp = load_image(input, args["size"])
 
-        @info "Running gray scale algorithm..." now()
-        out = run(inp, pins, size, steps)
+        @info "Running gray scale algorithm..."
+        out = run(inp, args)
 
-        @info "Saving final output image to: '$output'" now()
+        @info "Saving final output image to: '$output'"
         out = Gray.(complement.(out))
         save(output * ".png", out)
     else
         @info "Loading input image: '$input'"
-        rgb = load_rgb_image(input, size)
+        rgb = load_rgb_image(input, args["size"])
 
-        @info "Running RGB algorithm..." now()
-        rgb = [run(color, pins, size, steps) for color in rgb]
+        @info "Running RGB algorithm..."
+        rgb = [run(color, args) for color in rgb]
 
-        @info "Saving final output image to: '$output'" now()
+        @info "Saving final output image to: '$output'"
         out = complement.(RGB.(rgb...))
         save(output * ".png", out)
     end
 
-    if args["gif"] & args["color"]
-        frames, n = args["gif-frames"], div(args["gif-count"] - 1, 3)
-        sr, sg, sb = (1:n, (n + 1):(2 * n), (2 * n + 1):(3 * n))
-        frames = RGB.(frames[:, :, sr], frames[:, :, sg], frames[:, :, sb])
-        save(output * ".gif", frames, fps = 5)
-    elseif args["gif"]
-        save(output * ".gif", args["gif-frames"], fps = 5)
-    end
+    @info "Saving final output as a GIF..."
+    args["gif"] && save_gif(output, args["color"])
+
+    @info "Done"
 end
 
 function parse_cmd()
@@ -90,11 +96,19 @@ function parse_cmd()
         help = "number of algorithm iterations"
         arg_type = Int
         default = 1000
-        "--gif"
-        help = "Save output as a GIF"
-        action = :store_true
+        "--line-strength"
+        help = "line intensity ranging from 1-100"
+        arg_type = Int
+        default = 25
+        "--blur"
+        help = "gaussian blur kernel size"
+        arg_type = Int
+        default = 1
         "--color"
         help = "RGB mode"
+        action = :store_true
+        "--gif"
+        help = "Save output as a GIF"
         action = :store_true
         "--verbose"
         help = "verbose mode"
@@ -141,34 +155,38 @@ function crop_to_square(image::Matrix{RGB{N0f8}})::Matrix{RGB{N0f8}}
     return cropped_img
 end
 
-function run(input::Image, pins::Int, size::Int, steps::Int)::Image
-    @debug "Generating chords and pins positions" now()
-    pins = gen_pins(pins, size)
-    pin2chords = Dict(p => gen_chords(p, pins, size) for p in pins)
+function run(input::Image, args::Dict = DefaultArgs)::Image
+    @debug "Generating chords and pins positions"
+    pins = gen_pins(args["pins"], args["size"])
+    pin2chords = Dict(p => gen_chords(p, pins, args["size"]) for p in pins)
 
-    @debug "Starting algorithm..." now()
-    output = zeros(N0f8, size, size)
+    @debug "Starting algorithm..."
+    output = zeros(N0f8, args["size"], args["size"])
     pin = rand(pins)
 
-    for step = 1:steps
+    for step = 1:args["steps"]
+        @debug "Step: $step"
         if step % 20 == 0
             pin = rand(pins)
-            log_step(step, output)
+            args["gif"] && save_frame(output)
         end
 
+        @debug "Generating chord images..."
         chords = pin2chords[pin]
-        imgs = gen_img.(chords, size)
+        @time begin
+            imgs = [gen_img(c, args) for c in chords]
+        end
 
         # if length(imgs) == 0
         #     break
         # end
 
-        @debug "Calculating error in chords..." now()
+        @debug "Calculating error in chords..."
         error, idx = select_best_chord(input, imgs)
         chord, img = chords[idx], imgs[idx]
-        @debug "Error calculated" now() idx, error
+        @debug "Error calculated" idx, error
 
-        @debug "Updating images and position..." now()
+        @debug "Updating images and position..."
         add_imgs!(input, img)
         add_imgs!(output, img)
 
@@ -207,8 +225,9 @@ function to_chord(p::Point, q::Point)::Chord
     return (p => q)
 end
 
-@memoize Dict function gen_img(chord::Chord, size::Int)::Image
+@memoize Dict function gen_img(chord::Chord, args::Dict)::Image
     # calculate the linear and angular coefficient of line (b-a)
+    size, strength, blur = args["size"], args["line-strength"] / 100, args["blur"]
 
     # calculate line / chord points
     p, q = chord
@@ -223,10 +242,10 @@ end
 
     m = zeros(Gray{N0f8}, size, size)
     @inbounds @simd for i in eachindex(x)
-        m[x[i], y[i]] = 0.25 # line_strength
+        m[x[i], y[i]] = strength
     end
     # gaussian filter to smooth the line
-    imfilter(m, Kernel.gaussian(1))
+    imfilter(m, Kernel.gaussian(blur))
 end
 
 function get_coefficients(p::Point, q::Point)::Tuple{Float64,Float64}
@@ -255,14 +274,20 @@ function add_imgs!(img::Image, curve::Image)::Image
     img
 end
 
-function log_step(step::Int, out::Image)
-    dt = Dates.format(now(), "HH:MM:SS")
-    @info "$dt | Step: $step"
-    if isdefined(Main.StringArt, :args) & args["gif"]
-        img = complement.(out)
-        args["gif-frames"][:, :, args["gif-count"]] .= img
-        args["gif-count"] += 1
+function save_frame(img::Image)
+    global gif_count, gif_frames
+    gif_frames[:, :, gif_count] .= complement.(img)
+    gif_count += 1
+end
+
+function save_gif(output::String, color::Bool)
+    global gif_count, gif_frames
+    if color
+        n = div(gif_count - 1, 3)
+        sr, sg, sb = (1:n, (n + 1):(2 * n), (2 * n + 1):(3 * n))
+        gif_frames = RGB.(gif_frames[:, :, sr], gif_frames[:, :, sg], gif_frames[:, :, sb])
     end
+    save(output * ".gif", gif_frames, fps = 5)
 end
 
 end
