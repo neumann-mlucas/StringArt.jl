@@ -13,7 +13,7 @@ const Point = ComplexF64
 const Chord = Pair{Point}
 const Image = Matrix{N0f8}
 
-const DefaultArgs = Dict{String,Int}((
+const DefaultArgs = Dict{String,Any}((
     "blur" => 1,
     "line-strength" => 25,
     "pins" => 180,
@@ -141,7 +141,7 @@ function load_rgb_image(image_path::String, size::Int)::Tuple{Image,Image,Image}
     red.(img), green.(img), blue.(img)
 end
 
-function crop_to_square(image::Matrix{RGB{N0f8}})::Matrix{RGB{N0f8}}
+function crop_to_square(image::Matrix)::Matrix
     # Calculate the size of the square
     height, width = size(image)
     crop_size = min(height, width)
@@ -173,9 +173,7 @@ function run(input::Image, args::Dict = DefaultArgs)::Image
 
         @debug "Generating chord images..."
         chords = pin2chords[pin]
-        @time begin
-            imgs = [gen_img(c, args) for c in chords]
-        end
+        imgs = [gen_img(c, args) for c in chords] # memoize doest suport threads
 
         # if length(imgs) == 0
         #     break
@@ -241,8 +239,8 @@ end
     y = floor.(Int, y)
 
     m = zeros(Gray{N0f8}, size, size)
-    @inbounds @simd for i in eachindex(x)
-        m[x[i], y[i]] = strength
+    @simd for i in eachindex(x)
+        @inbounds m[x[i], y[i]] = strength
     end
     # gaussian filter to smooth the line
     imfilter(m, Kernel.gaussian(blur))
@@ -260,7 +258,7 @@ function select_best_chord(img::Image, curves::Vector{Image})::Tuple{Float32,Int
     cimg = complement.(img)
     errors = zeros(Float32, length(curves))
     @threads for i in eachindex(curves)
-        errors[i] = Images.ssd(cimg, curves[i])
+        @inbounds errors[i] = Images.ssd(cimg, curves[i])
     end
     findmin(errors)
 end
@@ -268,8 +266,8 @@ end
 function add_imgs!(img::Image, curve::Image)::Image
     idx = [i for i in eachindex(curve) if curve[i] != 0]
     # add images clipping values outside the range 0<x<1 (not a valid color)
-    @inbounds @simd for i in idx
-        img[i] = clamp(float32(img[i]) + float32(curve[i]), 0.0, 1.0)
+    @simd for i in idx
+        @inbounds img[i] = clamp(float32(img[i]) + float32(curve[i]), 0.0, 1.0)
     end
     img
 end
