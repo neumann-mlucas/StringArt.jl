@@ -109,6 +109,10 @@ optional arguments:
   <img src="examples/einstein.png" alt="Albert Einstein" width="400px" />
 </p>
 
+<p align="center">
+  <img src="examples/eye.png" alt="Eye" width="400px" />
+</p>
+
 #### RGB Mode
 
 <p align="center">
@@ -116,8 +120,14 @@ optional arguments:
 </p>
 
 <p align="center">
-  <img src="examples/dog.png" alt="Dog" width="400px" />
+  <img src="examples/lady.png" alt="Lady with an Ermine" width="400px" />
 </p>
+
+<p align="center">
+  <img src="examples/lucifer.png" alt="The Fallen Angel" width="400px" />
+</p>
+
+#### Animation
 
 ---
 

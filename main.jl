@@ -13,6 +13,8 @@ const Point = ComplexF64
 const Chord = Pair{Point}
 const Image = Matrix{N0f8}
 
+const INTERVAL = 20
+
 const DefaultArgs = Dict{String,Any}((
     "blur" => 1,
     "line-strength" => 25,
@@ -38,7 +40,9 @@ function main()
     input, output = args["input"], args["output"]
 
     if args["gif"]
-        frames = (args["color"]) ? 3 * div(args["steps"], 20) : div(args["steps"], 20)
+        frames =
+            (args["color"]) ? 3 * div(args["steps"], INTERVAL) :
+            div(args["steps"], INTERVAL)
         global gif_frames = Array{N0f8}(undef, args["size"], args["size"], frames)
         global gif_count = 1
     end
@@ -166,7 +170,7 @@ function run(input::Image, args::Dict = DefaultArgs)::Image
 
     for step = 1:args["steps"]
         @debug "Step: $step"
-        if step % 20 == 0
+        if step % INTERVAL == 0
             pin = rand(pins)
             args["gif"] && save_frame(output)
         end
@@ -223,7 +227,7 @@ function to_chord(p::Point, q::Point)::Chord
     return (p => q)
 end
 
-@memoize Dict function gen_img(chord::Chord, args::Dict)::Image
+@memoize Dict function gen_img(chord::Chord, args::Dict = DefaultArgs)::Image
     # calculate the linear and angular coefficient of line (b-a)
     size, strength, blur = args["size"], args["line-strength"] / 100, args["blur"]
 
@@ -239,7 +243,7 @@ end
     y = floor.(Int, y)
 
     m = zeros(Gray{N0f8}, size, size)
-    @simd for i in eachindex(x)
+    for i in eachindex(x)
         @inbounds m[x[i], y[i]] = strength
     end
     # gaussian filter to smooth the line
@@ -256,7 +260,7 @@ end
 function select_best_chord(img::Image, curves::Vector{Image})::Tuple{Float32,Int}
     # apply error function to all images and find the minium
     cimg = complement.(img)
-    errors = zeros(Float32, length(curves))
+    errors = Vector{Float32}(undef, length(curves))
     @threads for i in eachindex(curves)
         @inbounds errors[i] = Images.ssd(cimg, curves[i])
     end
