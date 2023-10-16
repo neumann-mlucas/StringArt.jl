@@ -129,13 +129,15 @@ optional arguments:
 
 #### Animation
 
+<p align="center">
+  <img src="examples/david.gif" alt="David Gif" width="400px" />
+</p>
+
 ---
 
 ### TODO
 
 - [x] GIF mode
-- [ ] take a list of files as inputs
-- [x] Optimize (or cache) setup
-- [ ] Eliminate graphical bug (black dots at the center)
-- [ ] make it more memory efficient (sparse matrix doesn't work)
-- [ ] port the code to the GPU
+- [ ] Take a List of Files as Inputs
+- [ ] Optimize Memory Usage
+- [ ] Port Code to the GPU
