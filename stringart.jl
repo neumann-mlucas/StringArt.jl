@@ -25,6 +25,10 @@ export load_rgb_image
 export run
 export save_gif
 
+# debug functions
+export plot_pins
+export plot_chords
+
 mutable struct GifWrapper
     frames:: Array{N0f8}
     count:: Int
@@ -207,6 +211,39 @@ function gen_gif_wrapper(args::Dict)::GifWrapper
 
     frames = Array{N0f8}(undef, args["size"], args["size"], n_frames)
     GifWrapper(frames, 1)
+end
+
+function plot_pins(input::Image, args::Dict = DefaultArgs)::Image
+    LEN = 4
+
+    @debug "Generating pins positions"
+    pins = gen_pins(args["pins"], args["size"])
+
+    @debug "Ploting pins positions"
+    width, height = size(input)
+    for pin in pins
+        lbx, ubx = Int(max(real(pin)-LEN,0)), Int(min(real(pin)+LEN,width))
+        lby, uby = Int(max(imag(pin)-LEN,0)), Int(min(imag(pin)+LEN,height))
+        input[lbx:ubx,lby:uby] .= 0
+    end
+
+    @debug "Done"
+    return input
+end
+
+function plot_chords(input::Image, args::Dict = DefaultArgs)::Image
+    @debug "Generating chords"
+    pins = gen_pins(args["pins"], args["size"])
+    chords = gen_chords(pins[1], pins, args["size"])
+
+    @debug "Ploting chords"
+    for chord in chords 
+        img = gen_img(chord, args)
+        add_imgs!(input, img)
+    end
+
+    @debug "Done"
+    return input
 end
 
 end
