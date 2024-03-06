@@ -27,8 +27,8 @@ Additionally, the script features a command-line interface (CLI) with various tw
 - Create all possible lines connecting P to the other pins in the circle.
 - Calculate the error between each lines and the source image.
 - Find the line (L) that gives the minimum error.
-- Update the output image (add L) and the source image (subtract L).
-- Set the pin to be the other pin of L.
+- Update the output image adding L, and the source image subtracting L.
+- Set the pin to be opposite point in the line L.
 
 **Line Generating Function:**
 One-pixel-width lines (or any square/stair-like lines) do not yield good results. Experimentation with different line functions is essential here. I ended up choosing to apply the Gaussian Blur Kernel to the line. It's simple, and it works (also, it eliminates the need to fine-tune other parameters).
