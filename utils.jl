@@ -91,7 +91,7 @@ function parse_cmd()
         arg_type = Int
         default = 1
         "--colors"
-        help = "HEX code of color to use in RGB mode"
+        help = "HEX code of colors to use in RGB mode"
         default = "#FF0000,#00FF00,#0000FF"
         "--color"
         help = "RGB mode"
