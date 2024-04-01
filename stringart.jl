@@ -12,6 +12,7 @@ using Memoize
 const Point = ComplexF64
 const Chord = Pair{Point}
 const Image = Matrix{N0f8}
+const Colors = Vector{RGB{N0f8}}
 
 const INTERVAL = 20
 
@@ -20,14 +21,16 @@ const DefaultArgs = Dict{String,Any}
 export gen_gif_wrapper
 export GifWrapper
 
+export aggreate_images
+export load_color_image
 export load_image
-export load_rgb_image
 export run
 export save_gif
 
 # debug functions
 export plot_pins
 export plot_chords
+export plot_color
 
 mutable struct GifWrapper
     frames:: Array{N0f8}
@@ -47,15 +50,16 @@ function load_image(image_path::String, size::Int)::Image
 end
 
 # TODO: enhance image contrast here
-function load_rgb_image(image_path::String, size::Int)::Tuple{Image,Image,Image}
+function load_color_image(image_path::String, size::Int, colors::Colors)::Vector{Image}
     # Read the image and convert it to an array
     @assert isfile(image_path)
     img = Images.load(image_path)
     # Resize the image to the specified dimensions
     img = crop_to_square(img)
     img = Images.imresize(img, size, size)
-    # Convert the Image to gray scale
-    red.(img), green.(img), blue.(img)
+    # Extract colors from Image and convert to gray scale
+    extract_color(color) = N0f8.(Gray.(mapc.(*, img, color)))
+    map(extract_color, colors)
 end
 
 function crop_to_square(image::Matrix)::Matrix
@@ -194,6 +198,7 @@ function save_frame(img::Image, gif:: GifWrapper)
     gif.count += 1
 end
 
+# TODO: support variable number of colors
 function save_gif(output::String, color::Bool, gif::GifWrapper)
     if color
         n = div(gif.count - 1, 3)
@@ -212,6 +217,16 @@ function gen_gif_wrapper(args::Dict)::GifWrapper
     frames = Array{N0f8}(undef, args["size"], args["size"], n_frames)
     GifWrapper(frames, 1)
 end
+
+function aggreate_images(imgs::Vector{Image}, colors::Colors)::Image
+    # convert grey image to color image
+    to_color_image(img, color) = mapc.(*, RGB.(img), color)
+    imgs = map(to_color_image, imgs, colors)
+    # sum all images up
+    complement.(foldr(.+, imgs))
+end
+
+### UTILS FUNCTIONS
 
 function plot_pins(input::Image, args::Dict = DefaultArgs)::Image
     LEN = 4
@@ -244,6 +259,10 @@ function plot_chords(input::Image, args::Dict = DefaultArgs)::Image
 
     @debug "Done"
     return input
+end
+
+function plot_color(input::Vector{Image}, args::Dict = DefaultArgs)::Image
+    return input[1]
 end
 
 end

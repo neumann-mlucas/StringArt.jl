@@ -16,6 +16,7 @@ const DefaultArgs = Dict{String,Any}((
     "steps" => 1000,
     "gif" => false,
     "color" => false,
+    "colors" => "#FF0000,#00FF00,#0000FF",
 ))
 
 function main()
@@ -31,12 +32,18 @@ function main()
     args = merge(DefaultArgs, args)
     input, output = args["input"], args["output"]
 
+    # default colors
+    colors = parse_colors(args["colors"])
+    # function to run
     run = select_function(args["function"])
 
     @info "Loading input image: '$input'"
     inp = StringArt.load_image(input, args["size"])
+    if args["function"] == "plot_color"
+        inp = StringArt.load_color_image(input, args["size"], colors)
+    end
 
-    @info "Running gray scale algorithm..."
+    @info "Running selected function $args['function']..."
     out = run(inp, args)
 
     @info "Saving final output image to: '$output'"
@@ -83,6 +90,15 @@ function parse_cmd()
         help = "gaussian blur kernel size"
         arg_type = Int
         default = 1
+        "--colors"
+        help = "HEX code of color to use in RGB mode"
+        default = "#FF0000,#00FF00,#0000FF"
+        "--color"
+        help = "RGB mode"
+        action = :store_true
+        "--gif"
+        help = "Save output as a GIF"
+        action = :store_true
         "--verbose"
         help = "verbose mode"
         action = :store_true
@@ -90,11 +106,25 @@ function parse_cmd()
     parse_args(parser)
 end
 
+function parse_colors(colors::String)::StringArt.Colors
+    to_color(c) = parse(RGB{N0f8}, c)
+    # default value for colors
+    rgb_colors = [RGB(1,0,0), RGB(0,1,0), RGB(0,0,1)]
+    try
+        rgb_colors = map(to_color, split(colors,","))
+    catch e
+        @error "Unable to parse '$colors' $e"
+    end
+    return rgb_colors
+end
+
 function select_function(function_name:: String)
     if function_name == "plot_pins"
         return StringArt.plot_pins
     elseif function_name == "plot_chords"
         return StringArt.plot_chords
+    elseif function_name == "plot_color"
+        return StringArt.plot_color
     end
 
     return x->x
