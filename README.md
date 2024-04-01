@@ -70,7 +70,7 @@ $ julia -O3 -t 8 main.jl -s 800 -i [input image] -o [output image]
 $ julia -O3 -t 8 main.jl --color -i [input image] -o [output image]
 
 #  RGB color mode with custom colors
-$ julia -O3 -t 8 main.jl --gif --colors "#FFFF33,#33FFFF" -i [input image] -o [output image]
+$ julia -O3 -t 8 main.jl --color --colors "#FFFF33,#33FFFF" -i [input image] -o [output image]
 
 # Saves GIF output
 $ julia -O3 -t 8 main.jl --gif -i [input image] -o [output image]
