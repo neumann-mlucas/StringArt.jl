@@ -69,8 +69,22 @@ $ julia -O3 -t 8 main.jl -s 800 -i [input image] -o [output image]
 # RGB color mode
 $ julia -O3 -t 8 main.jl --color -i [input image] -o [output image]
 
+#  RGB color mode with custom colors
+$ julia -O3 -t 8 main.jl --gif --colors "#FFFF33,#33FFFF" -i [input image] -o [output image]
+
 # Saves GIF output
 $ julia -O3 -t 8 main.jl --gif -i [input image] -o [output image]
+
+```
+
+### Debugging Utilities
+
+```bash
+# plot pins used in the image
+$ julia utils.jl -f plot_pins -i [input image] -o [output image]
+
+# plot color channel for a given color and input image
+$ julia utils.jl -f plot_colors --colors "#FF0000" -i [input image] -o [output image]
 ```
 
 ### Parameters
@@ -91,6 +105,7 @@ optional arguments:
                        default: 1000)
   --gif                Save output as a GIF
   --color              RGB mode
+  --colors             HEX code of colors to use in RGB mode
   --verbose            verbose mode
   -h, --help           show this help message and exit
 ```
@@ -98,6 +113,8 @@ optional arguments:
 > keep the number of pins bellow 250 and the image size bellow 1000.
 
 > the number of iteration steps is dependent on the image size. For size between 500 and 800, 2000 iteration is more than enough.
+
+> GIF mode with custom colors RGB mode is not supported
 
 ### Gallery
 
@@ -138,6 +155,7 @@ optional arguments:
 ### TODO
 
 - [x] GIF mode
-- [ ] Take a List of Files as Inputs
-- [ ] Optimize Memory Usage
+- [x] Optimize Memory Usage
+- [ ] Enhance Image Contrast and Remove Background
+- [ ] Support Custom Colors in GIF mode
 - [ ] Port Code to the GPU
