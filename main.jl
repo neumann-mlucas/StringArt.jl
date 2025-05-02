@@ -29,6 +29,11 @@ function main()
         ENV["JULIA_DEBUG"] = Main
     end
 
+    # if a set of color is passed, run in RGB mode
+    if args["colors"]
+        args["color"] = true
+    end
+
     # use command line options to define algorithm parameters
     args = merge(DefaultArgs, args)
     input, output = args["input"], args["output"]
@@ -119,9 +124,9 @@ end
 function parse_colors(colors::String)::StringArt.Colors
     to_color(c) = parse(RGB{N0f8}, c)
     # default value for colors
-    rgb_colors = [RGB(1,0,0), RGB(0,1,0), RGB(0,0,1)]
+    rgb_colors = [RGB(1, 0, 0), RGB(0, 1, 0), RGB(0, 0, 1)]
     try
-        rgb_colors = map(to_color, split(colors,","))
+        rgb_colors = map(to_color, split(colors, ","))
     catch e
         @error "Unable to parse '$colors' $e"
     end

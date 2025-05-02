@@ -33,14 +33,14 @@ export plot_chords
 export plot_color
 
 mutable struct GifWrapper
-    frames:: Array{N0f8}
-    count:: Int
+    frames::Array{N0f8}
+    count::Int
 end
 
-# TODO: enhance image contrast here
+""" Load and preprocess a grayscale image from disk, resizing and cropping to a square. """
 function load_image(image_path::String, size::Int)::Image
     # Read the image and convert it to an array
-    @assert isfile(image_path)
+    @assert isfile(image_path) "Image file not found: $image_path"
     img = Images.load(image_path)
     # Resize the image to the specified dimensions
     img = crop_to_square(img)
@@ -49,10 +49,10 @@ function load_image(image_path::String, size::Int)::Image
     N0f8.(Gray.(img))
 end
 
-# TODO: enhance image contrast here
+""" Load image and return grayscale channels filtered by given RGB colors. """
 function load_color_image(image_path::String, size::Int, colors::Colors)::Vector{Image}
     # Read the image and convert it to an array
-    @assert isfile(image_path)
+    @assert isfile(image_path) "Image file not found: $image_path"
     img = Images.load(image_path)
     # Resize the image to the specified dimensions
     img = crop_to_square(img)
@@ -62,6 +62,7 @@ function load_color_image(image_path::String, size::Int, colors::Colors)::Vector
     map(extract_color, colors)
 end
 
+""" Crop a rectangular image to its centered square portion. """
 function crop_to_square(image::Matrix)::Matrix
     # Calculate the size of the square
     height, width = size(image)
@@ -72,11 +73,12 @@ function crop_to_square(image::Matrix)::Matrix
     # Crop the image to a square shape
     cropped_img = zeros(RGB{N0f8}, crop_size, crop_size)
     cropped_img .=
-        image[start_h:(start_h + crop_size - 1), start_w:(start_w + crop_size - 1)]
+        image[start_h:(start_h+crop_size-1), start_w:(start_w+crop_size-1)]
     return cropped_img
 end
 
-function run(input::Image, gif::GifWrapper, args::Dict = DefaultArgs)::Image
+""" Run the string art generation algorithm. Optionally save GIF frames. """
+function run(input::Image, gif::GifWrapper, args::Dict=DefaultArgs)::Image
     @debug "Generating chords and pins positions"
     pins = gen_pins(args["pins"], args["size"])
     pin2chords = Dict(p => gen_chords(p, pins, args["size"]) for p in pins)
@@ -94,11 +96,7 @@ function run(input::Image, gif::GifWrapper, args::Dict = DefaultArgs)::Image
 
         @debug "Generating chord images..."
         chords = pin2chords[pin]
-        imgs = [gen_img(c, args) for c in chords] # memoize doest suport threads
-
-        # if length(imgs) == 0
-        #     break
-        # end
+        imgs = [gen_img(c, args) for c in chords]
 
         @debug "Calculating error in chords..."
         error, idx = select_best_chord(input, imgs)
@@ -109,16 +107,13 @@ function run(input::Image, gif::GifWrapper, args::Dict = DefaultArgs)::Image
         add_imgs!(input, img)
         add_imgs!(output, img)
 
-        # old = pin
-        pin = chord.first == pin ? chord.second : chord.first
-
-        # excludes current chord from map
-        # filter!(p -> p != chord, pin2chords[old])
-        # filter!(p -> p != chord, pin2chords[pin])
+        # use the second point of the chord as the next pin
+        pin = (chord.first == pin) ? chord.second : chord.first
     end
     output
 end
 
+""" Generate `n` evenly spaced points around a circle on a square canvas. """
 function gen_pins(pins::Int, size::Int)::Vector{Point}
     center = (size / 2) + (size / 2) * 1im
     radius = 0.95 * (size / 2)
@@ -131,6 +126,7 @@ function gen_pins(pins::Int, size::Int)::Vector{Point}
     round.(coords .+ center) |> unique
 end
 
+""" Generate valid chords from a given point `p` to other canvas points. """
 function gen_chords(p::Point, points::Vector{Point}, size::Int)::Vector{Chord}
     # exclude small chords
     valid_distance = (p, q) -> (abs(p - q) > size * 0.1)
@@ -138,13 +134,15 @@ function gen_chords(p::Point, points::Vector{Point}, size::Int)::Vector{Chord}
     [to_chord(p, q) for q in points if valid_distance(p, q)]
 end
 
+""" Create an ordered chord (pair of points). """
 function to_chord(p::Point, q::Point)::Chord
     # pair should be order so it can be searched
-    p, q = sort([p, q], by = x -> (real(x), imag(x)))
+    p, q = sort([p, q], by=x -> (real(x), imag(x)))
     return (p => q)
 end
 
-@memoize Dict function gen_img(chord::Chord, args::Dict = DefaultArgs)::Image
+""" Generate grayscale image representing the line between two points. Memoized. """
+@memoize Dict function gen_img(chord::Chord, args::Dict=DefaultArgs)::Image
     # calculate the linear and angular coefficient of line (b-a)
     size, strength, blur = args["size"], args["line-strength"] / 100, args["blur"]
 
@@ -160,13 +158,14 @@ end
     y = floor.(Int, y)
 
     m = zeros(Gray{N0f8}, size, size)
-    for i in eachindex(x)
-        @inbounds m[x[i], y[i]] = strength
+    @inbounds for i in eachindex(x)
+        m[x[i], y[i]] = strength
     end
     # gaussian filter to smooth the line
     imfilter(m, Kernel.gaussian(blur))
 end
 
+""" Get slope and intercept of the line between two points. """
 function get_coefficients(p::Point, q::Point)::Tuple{Float64,Float64}
     # calculate line (q-p) coefficient
     a = clamp(tan(angle(p - q)), -1000.0, 1000.0)
@@ -174,8 +173,9 @@ function get_coefficients(p::Point, q::Point)::Tuple{Float64,Float64}
     return (a, b)
 end
 
+""" Select chord whose generated image best matches the remaining error. """
 function select_best_chord(img::Image, curves::Vector{Image})::Tuple{Float32,Int}
-    # apply error function to all images and find the minium
+    # apply error function to all images and find the minimum
     cimg = complement.(img)
     errors = Vector{Float32}(undef, length(curves))
     @threads for i in eachindex(curves)
@@ -184,6 +184,7 @@ function select_best_chord(img::Image, curves::Vector{Image})::Tuple{Float32,Int
     findmin(errors)
 end
 
+""" Add grayscale curve to image, clipping values to valid range. """
 function add_imgs!(img::Image, curve::Image)::Image
     idx = [i for i in eachindex(curve) if curve[i] != 0]
     # add images clipping values outside the range 0<x<1 (not a valid color)
@@ -193,21 +194,23 @@ function add_imgs!(img::Image, curve::Image)::Image
     img
 end
 
-function save_frame(img::Image, gif:: GifWrapper)
+""" Save a complement frame to a gif wrapper object. """
+function save_frame(img::Image, gif::GifWrapper)
     gif.frames[:, :, gif.count] .= complement.(img)
     gif.count += 1
 end
 
-# TODO: support variable number of colors
+""" Write accumulated frames in `gif` to disk. """
 function save_gif(output::String, color::Bool, gif::GifWrapper)
     if color
         n = div(gif.count - 1, 3)
-        sr, sg, sb = (1:n, (n + 1):(2 * n), (2 * n + 1):(3 * n))
+        sr, sg, sb = (1:n, (n+1):(2*n), (2*n+1):(3*n))
         gif_frames = RGB.(gif.frames[:, :, sr], gif.frames[:, :, sg], gif.frames[:, :, sb])
     end
-    save(output * ".gif", gif_frames, fps = 5)
+    save(output * ".gif", gif_frames, fps=5)
 end
 
+""" Create a GifWrapper for a given number of steps and color mode. """
 function gen_gif_wrapper(args::Dict)::GifWrapper
     n_frames = 1
     if args["gif"]
@@ -218,6 +221,7 @@ function gen_gif_wrapper(args::Dict)::GifWrapper
     GifWrapper(frames, 1)
 end
 
+""" Combine multiple grayscale channels into one color image. """
 function aggreate_images(imgs::Vector{Image}, colors::Colors)::Image
     # convert grey image to color image
     to_color_image(img, color) = mapc.(*, RGB.(img), color)
@@ -228,7 +232,8 @@ end
 
 ### UTILS FUNCTIONS
 
-function plot_pins(input::Image, args::Dict = DefaultArgs)::Image
+""" Visual debug: overlay pin locations on image. """
+function plot_pins(input::Image, args::Dict=DefaultArgs)::Image
     LEN = 4
 
     @debug "Generating pins positions"
@@ -237,22 +242,23 @@ function plot_pins(input::Image, args::Dict = DefaultArgs)::Image
     @debug "Ploting pins positions"
     width, height = size(input)
     for pin in pins
-        lbx, ubx = Int(max(real(pin)-LEN,0)), Int(min(real(pin)+LEN,width))
-        lby, uby = Int(max(imag(pin)-LEN,0)), Int(min(imag(pin)+LEN,height))
-        input[lbx:ubx,lby:uby] .= 0
+        lbx, ubx = Int(max(real(pin) - LEN, 0)), Int(min(real(pin) + LEN, width))
+        lby, uby = Int(max(imag(pin) - LEN, 0)), Int(min(imag(pin) + LEN, height))
+        input[lbx:ubx, lby:uby] .= 0
     end
 
     @debug "Done"
     return input
 end
 
-function plot_chords(input::Image, args::Dict = DefaultArgs)::Image
+""" Visual debug: draw all chords from the first pin. """
+function plot_chords(input::Image, args::Dict=DefaultArgs)::Image
     @debug "Generating chords"
     pins = gen_pins(args["pins"], args["size"])
     chords = gen_chords(pins[1], pins, args["size"])
 
     @debug "Ploting chords"
-    for chord in chords 
+    for chord in chords
         img = gen_img(chord, args)
         add_imgs!(input, img)
     end
@@ -261,7 +267,8 @@ function plot_chords(input::Image, args::Dict = DefaultArgs)::Image
     return input
 end
 
-function plot_color(input::Vector{Image}, args::Dict = DefaultArgs)::Image
+""" Visual debug: function stub for color plotting. """
+function plot_color(input::Vector{Image}, args::Dict=DefaultArgs)::Image
     return input[1]
 end
 
