@@ -110,7 +110,7 @@ optional arguments:
   -h, --help           show this help message and exit
 ```
 
-> keep the number of pins bellow 250 and the image size bellow 1000.
+> keep the number of pins below 250 and the image size below 1000.
 
 > the number of iteration steps is dependent on the image size. For size between 500 and 800, 2000 iteration is more than enough.
 
@@ -156,6 +156,7 @@ optional arguments:
 
 - [x] GIF mode
 - [x] Optimize Memory Usage
-- [ ] Enhance Image Contrast and Remove Background
+- [ ] Enhance Image Contrast
 - [ ] Support Custom Colors in GIF mode
+- [ ] Support SVG output
 - [ ] Port Code to the GPU
