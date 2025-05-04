@@ -3,12 +3,12 @@ module StringArt
 using ArgParse
 using Base
 using Base.Threads
-using Dates
 using Colors
 using FileIO
 using Images
 using Logging
 using Memoize
+using Printf
 
 const Point = ComplexF64
 const Chord = Pair{Point,Point}
@@ -25,6 +25,7 @@ export load_color_image
 export load_image
 export run
 export save_gif
+export save_svg
 
 # debug functions
 export plot_pins
@@ -78,26 +79,33 @@ function crop_to_square(image::Matrix)::Matrix
 end
 
 """ Main function to generate string art image. Returns final image in png, svg and gif formats. """
-function run(input::Vector{Image}, args::Dict=DefaultArgs)::Tuple{CImage,String,GifWrapper}
+function run(input::Vector{Image}, args::DefaultArgs)::Tuple{CImage,String,GifWrapper}
     # create struct that holds gif frames
-    gif = StringArt.gen_gif_wrapper(args)
+    gif = gen_gif_wrapper(args)
+    # initialize svg content
+    svg = [svg_header(args)]
     # initialize output image
-    output = zeros(RGB{N0f8}, args["size"], args["size"])
+    png = zeros(RGB{N0f8}, args["size"], args["size"])
     for (color, img) in zip(args["colors"], input)
         # find chords to be draw
         chords = run_algorithm(img, args)
         # draw each chord
         for (n, chord) in enumerate(chords)
-            # logic for png output
+            # add chord to png image
             img = gen_img(chord, args) .* complement(color)
-            add_imgs!(output, img)
+            add_imgs!(png, img)
+            # draw svg shape
+            if args["svg"]
+                push!(svg, draw_line(chord, color, args))
+            end
             # save gif frame
             if args["gif"] && n % INTERVAL == 0
-                save_frame(complement.(output), gif)
+                save_frame(complement.(png), gif)
             end
         end
     end
-    return (complement.(output), "", gif)
+    push!(svg, "</svg>")
+    return (complement.(png), join(svg, "\n"), gif)
 end
 
 """ Core string art generation loop. Produces ordered chords for image approximation. """
@@ -163,7 +171,7 @@ function to_chord(p::Point, q::Point)::Chord
 end
 
 """ Generate grayscale image representing a line between two points. """
-@memoize Dict function gen_img(chord::Chord, args::Dict=DefaultArgs)::Image
+@memoize Dict function gen_img(chord::Chord, args::DefaultArgs)::Image
     # calculate the linear and angular coefficient of line (b-a)
     size, strength, blur = args["size"], args["line-strength"] / 100, args["blur"]
 
@@ -250,10 +258,29 @@ function gen_gif_wrapper(args::Dict)::GifWrapper
     GifWrapper(frames, 1)
 end
 
+function svg_header(args::DefaultArgs)::String
+    size = args["size"]
+    """<svg xmlns="http://www.w3.org/2000/svg" width="$size" height="$size" viewBox="0 0 $size $size">\n"""
+end
+
+function draw_line(chord::Chord, color::RGB{N0f8}, args::DefaultArgs)::String
+    x1, x2 = imag(chord.first), imag(chord.second)
+    y1, y2 = real(chord.first), real(chord.second)
+    stroke = @sprintf("#%02X%02X%02X", round(Int, 255 * color.r), round(Int, 255 * color.g), round(Int, 255 * color.b))
+    width = @sprintf("%.2f", args["line-strength"] / 120)
+    """<line x1="$x1" x2="$x2" y1="$y1" y2="$y2" stroke="$stroke" stroke-width="$width"/>"""
+end
+
+function save_svg(output::String, svg::String)
+    open(output * ".svg", "w") do f
+        write(f, svg)
+    end
+end
+
 ### DEBUGGING UTILITIES
 
 """ Visual debug: overlay pin locations on image. """
-function plot_pins(input::Image, args::Dict=DefaultArgs)::Image
+function plot_pins(input::Image, args::DefaultArgs)::Image
     LEN = 4
 
     @debug "Generating pins positions"
@@ -272,7 +299,7 @@ function plot_pins(input::Image, args::Dict=DefaultArgs)::Image
 end
 
 """ Visual debug: draw all chords from the first pin. """
-function plot_chords(input::Image, args::Dict=DefaultArgs)::Image
+function plot_chords(input::Image, args::DefaultArgs)::Image
     @debug "Generating chords"
     pins = gen_pins(args["pins"], args["size"])
     chords = gen_chords(pins[1], pins, args["size"])

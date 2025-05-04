@@ -21,23 +21,29 @@ function main()
     # handle color options
     args = args_postprocessing(args)
 
+    @debug "Parsed arguments: $args"
+
     # use command line options to define algorithm parameters
-    input, output = args["input"], args["output"]
+    input_path, output_path = args["input"], args["output"]
 
-    # create struct that holds gif frames
-    gif = StringArt.gen_gif_wrapper(args)
-
-    @info "Loading input image '$input'"
-    inp = args["color-mode"] ? load_color_image(input, args["size"], args["colors"]) : load_image(input, args["size"])
+    @info "Loading input image '$input_path'"
+    inp = args["color-mode"] ? load_color_image(input_path, args["size"], args["colors"]) : load_image(input_path, args["size"])
 
     @info "Generating chords and pins positions"
-    png, _, gif = StringArt.run(inp, args)
+    png, svg, gif = StringArt.run(inp, args)
 
     @info "Saving final output as a PNG..."
-    save(output * ".png", png)
+    save(output_path * ".png", png)
 
-    @info "Saving final output as a GIF..."
-    args["gif"] && StringArt.save_gif(output, gif)
+    args["svg"] && let
+        @info "Saving final output as a PNG..."
+        StringArt.save_svg(output_path, svg)
+    end
+
+    args["gif"] && let
+        @info "Saving final output as a GIF..."
+        StringArt.save_gif(output_path, gif)
+    end
 
     @info "Done"
 end
@@ -58,15 +64,12 @@ function parse_cmd()
         "--gif"
         help = "Save output as a GIF"
         action = :store_true
-        default = false
         "--svg"
         help = "Save output as a SVG"
         action = :store_true
-        default = false
         "--color-mode"
         help = "RGB mode"
         action = :store_true
-        default = false
         "--size", "-s"
         help = "output image size in pixels"
         arg_type = Int
@@ -105,7 +108,7 @@ end
 function parse_colors(colors::String)::StringArt.Colors
     to_color(c) = parse(RGB{N0f8}, c)
     # default value for colors
-    rgb_colors = [RGB(1.0, 0.0, 0.0), RGB(0.0, 1.0, 0.0), RGB(0.0, 0.0, 1.0)]
+    rgb_colors = [RGB{N0f8}(1.0, 0.0, 0.0), RGB{N0f8}(0.0, 1.0, 0.0), RGB{N0f8}(0.0, 0.0, 1.0)]
     try
         rgb_colors = map(to_color, split(colors, ","))
     catch e
@@ -129,7 +132,7 @@ function args_postprocessing(args)::Dict{String,Any}
         args["colors"] = parse_colors(args["custom-colors"])
     elseif args["color-mode"]
         # use default Red, Green and Blue
-        args["colors"] = [RGB(1.0, 0.0, 0.0), RGB(0.0, 1.0, 0.0), RGB(0.0, 0.0, 1.0)]
+        args["colors"] = parse_colors("#FF0000,#00FF00,#0000FF")
     else
         # run in greyscale mode
         args["colors"] = parse_colors("#000000")
