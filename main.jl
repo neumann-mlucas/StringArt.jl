@@ -5,20 +5,9 @@ include("stringart.jl")
 using .StringArt
 
 using ArgParse
+using FileIO
 using Images
 using Logging
-
-const DefaultArgs = Dict{String,Any}((
-    "blur" => 1,
-    "line-strength" => 25,
-    "pins" => 180,
-    "size" => 500,
-    "steps" => 1000,
-    "gif" => false,
-    "color" => false,
-    "colors" => "#FF0000,#00FF00,#0000FF",
-))
-
 
 function main()
     # parse command line arguments
@@ -29,45 +18,26 @@ function main()
         ENV["JULIA_DEBUG"] = Main
     end
 
-    # if a set of color is passed, run in RGB mode
-    if args["colors"]
-        args["color"] = true
-    end
+    # handle color options
+    args = args_postprocessing(args)
 
     # use command line options to define algorithm parameters
-    args = merge(DefaultArgs, args)
     input, output = args["input"], args["output"]
-
-    # default colors
-    colors = parse_colors(args["colors"])
 
     # create struct that holds gif frames
     gif = StringArt.gen_gif_wrapper(args)
 
-    if !args["color"]
-        @info "Loading input as grey image: '$input'"
-        inp = StringArt.load_image(input, args["size"])
+    @info "Loading input image '$input'"
+    inp = args["color-mode"] ? load_color_image(input, args["size"], args["colors"]) : load_image(input, args["size"])
 
-        @info "Running gray scale algorithm..."
-        out = StringArt.run(inp, gif, args)
+    @info "Generating chords and pins positions"
+    png, _, gif = StringArt.run(inp, args)
 
-        @info "Saving final output image to: '$output'"
-        out = Gray.(complement.(out))
-        save(output * ".png", out)
-    else
-        @info "Loading input as color image: '$input'"
-        imgs = StringArt.load_color_image(input, args["size"], colors)
-
-        @info "Running RGB algorithm..."
-        imgs = [StringArt.run(color, gif, args) for color in imgs]
-
-        @info "Saving final output image to: '$output'"
-        out = StringArt.aggreate_images(imgs, colors)
-        save(output * ".png", out)
-    end
+    @info "Saving final output as a PNG..."
+    save(output * ".png", png)
 
     @info "Saving final output as a GIF..."
-    args["gif"] && StringArt.save_gif(output, args["color"], gif)
+    args["gif"] && StringArt.save_gif(output, gif)
 
     @info "Done"
 end
@@ -85,6 +55,18 @@ function parse_cmd()
         help = "output image path whiteout extension"
         arg_type = String
         default = "output"
+        "--gif"
+        help = "Save output as a GIF"
+        action = :store_true
+        default = false
+        "--svg"
+        help = "Save output as a SVG"
+        action = :store_true
+        default = false
+        "--color-mode"
+        help = "RGB mode"
+        action = :store_true
+        default = false
         "--size", "-s"
         help = "output image size in pixels"
         arg_type = Int
@@ -105,15 +87,14 @@ function parse_cmd()
         help = "gaussian blur kernel size"
         arg_type = Int
         default = 1
-        "--colors"
+        "--custom-colors"
         help = "HEX code of colors to use in RGB mode"
-        default = "#FF0000,#00FF00,#0000FF"
-        "--color"
-        help = "RGB mode"
-        action = :store_true
-        "--gif"
-        help = "Save output as a GIF"
-        action = :store_true
+        arg_type = String
+        default = nothing
+        "--use-color-pallet"
+        help = "[WIP] extract a color pallet from the image to be use in color-mode"
+        arg_type = Int
+        default = nothing
         "--verbose"
         help = "verbose mode"
         action = :store_true
@@ -124,13 +105,42 @@ end
 function parse_colors(colors::String)::StringArt.Colors
     to_color(c) = parse(RGB{N0f8}, c)
     # default value for colors
-    rgb_colors = [RGB(1, 0, 0), RGB(0, 1, 0), RGB(0, 0, 1)]
+    rgb_colors = [RGB(1.0, 0.0, 0.0), RGB(0.0, 1.0, 0.0), RGB(0.0, 0.0, 1.0)]
     try
         rgb_colors = map(to_color, split(colors, ","))
     catch e
         @error "Unable to parse '$colors' $e"
     end
     return rgb_colors
+end
+
+function args_postprocessing(args)::Dict{String,Any}
+    # if color related argument is passed, run in RGB mode
+    if !isnothing(args["custom-colors"]) || !isnothing(args["use-color-pallet"])
+        args["color-mode"] = true
+    end
+
+    # parse colors from cmd arguments
+    if !isnothing(args["use-color-pallet"])
+        # WIP, not implemented yet
+        args["colors"] = parse_colors(args["custom-colors"])
+    elseif !isnothing(args["custom-colors"])
+        # try to parse custom RGB colors
+        args["colors"] = parse_colors(args["custom-colors"])
+    elseif args["color-mode"]
+        # use default Red, Green and Blue
+        args["colors"] = [RGB(1.0, 0.0, 0.0), RGB(0.0, 1.0, 0.0), RGB(0.0, 0.0, 1.0)]
+    else
+        # run in greyscale mode
+        args["colors"] = parse_colors("#000000")
+    end
+
+    # svg doesn't support gif mode
+    if args["svg"]
+        args["gif"] = false
+    end
+
+    return args
 end
 
 end
