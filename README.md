@@ -67,13 +67,16 @@ $ julia -O3 -t 8 main.jl -s 720 --steps 2000 -i [input image] -o [output image]
 $ julia -O3 -t 8 main.jl -s 800 -i [input image] -o [output image]
 
 # RGB color mode
-$ julia -O3 -t 8 main.jl --color -i [input image] -o [output image]
+$ julia -O3 -t 8 main.jl --color-mode -i [input image] -o [output image]
 
 #  RGB color mode with custom colors
-$ julia -O3 -t 8 main.jl --color --colors "#FFFF33,#33FFFF" -i [input image] -o [output image]
+$ julia -O3 -t 8 main.jl --custom-colors "#FFFF33,#33FFFF" -i [input image] -o [output image]
 
 # Saves GIF output
 $ julia -O3 -t 8 main.jl --gif -i [input image] -o [output image]
+
+# Saves as SVG
+$ julia -O3 -t 8 main.jl --svg -i [input image] -o [output image]
 
 ```
 
@@ -90,24 +93,41 @@ $ julia utils.jl -f plot_colors --colors "#FF0000" -i [input image] -o [output i
 ### Parameters
 
 ```bash
-usage: main.jl -i INPUT [-o OUTPUT] [-s SIZE] [-n PINS]
-               [--steps STEPS] [--gif] [--color] [--verbose] [-h]
+usage: main.jl -i INPUT [-o OUTPUT] [--gif] [--svg] [--color-mode]
+               [-s SIZE] [-n PINS] [--steps STEPS]
+               [--line-strength LINE-STRENGTH] [--blur BLUR]
+               [--custom-colors CUSTOM-COLORS]
+               [--use-color-pallet USE-COLOR-PALLET] [--verbose] [-h]
+
+StringArt - Convert images to string art
 
 optional arguments:
-  -i, --input INPUT    input image path
-  -o, --output OUTPUT  output image path whiteout extension (default:
-                       "output")
-  -s, --size SIZE      output image size in pixels (type: Int64,
-                       default: 512)
-  -n, --pins PINS      number of pins to use in canvas (type: Int64,
-                       default: 180)
-  --steps STEPS        number of algorithm iterations (type: Int64,
-                       default: 1000)
-  --gif                Save output as a GIF
-  --color              RGB mode
-  --colors             HEX code of colors to use in RGB mode
-  --verbose            verbose mode
-  -h, --help           show this help message and exit
+  -i, --input INPUT     input image path
+  -o, --output OUTPUT   output image path without extension (default:
+                        "output")
+  --gif                 Save output as a GIF
+  --svg                 Save output as a SVG
+  --color-mode          RGB mode
+  -s, --size SIZE       output image size in pixels (type: Int64,
+                        default: 512)
+  -n, --pins PINS       number of pins to use in canvas (type: Int64,
+                        default: 180)
+  --steps STEPS         number of algorithm iterations (type: Int64,
+                        default: 1000)
+  --line-strength LINE-STRENGTH
+                        line intensity ranging from 1-100 (type:
+                        Int64, default: 25)
+  --blur BLUR           gaussian blur kernel size (type: Int64,
+                        default: 1)
+  --custom-colors CUSTOM-COLORS
+                        HEX code of colors to use in RGB mode
+  --use-color-pallet USE-COLOR-PALLET
+                        extract a color palette from the image to be
+                        used in color-mode (type: Int64)
+  --verbose             verbose mode
+  -h, --help            show this help message and exit
+
+Example: julia main.jl -i input.jpg -o output --svg
 ```
 
 > keep the number of pins below 250 and the image size below 1000.
@@ -156,7 +176,7 @@ optional arguments:
 
 - [x] GIF mode
 - [x] Optimize Memory Usage
+- [x] Support Custom Colors in GIF mode
+- [x] Support SVG output
 - [ ] Enhance Image Contrast
-- [ ] Support Custom Colors in GIF mode
-- [ ] Support SVG output
 - [ ] Port Code to the GPU

@@ -43,7 +43,7 @@ function main()
         inp = StringArt.load_color_image(input, args["size"], colors)
     end
 
-    @info "Running selected function $args['function']..."
+    @info "Running selected function $(args["function"])..."
     out = run(inp, args)
 
     @info "Saving final output image to: '$output'"
@@ -55,11 +55,14 @@ end
 
 function parse_cmd()
     # Create an argument parser
-    parser = ArgParseSettings()
+    parser = ArgParseSettings(
+        description="StringArt Utilities - Debug and visualization tools",
+        epilog="Example: julia utils.jl -f plot_pins -i input.jpg -o debug"
+    )
     # Add arguments to the parser
     @add_arg_table parser begin
         "--function", "-f"
-        help = "util function to execute [plot_pins]"
+        help = "util function to execute (plot_pins, plot_chords, plot_color)"
         arg_type = String
         required = true
         "--input", "-i"
@@ -67,7 +70,7 @@ function parse_cmd()
         arg_type = String
         required = true
         "--output", "-o"
-        help = "output image path whiteout extension"
+        help = "output image path without extension"
         arg_type = String
         default = "output"
         "--size", "-s"
@@ -91,7 +94,7 @@ function parse_cmd()
         arg_type = Int
         default = 1
         "--colors"
-        help = "HEX code of colors to use in RGB mode"
+        help = "HEX code of colors to use in RGB mode (comma-separated)"
         default = "#FF0000,#00FF00,#0000FF"
         "--color"
         help = "RGB mode"
@@ -118,16 +121,14 @@ function parse_colors(colors::String)::StringArt.Colors
     return rgb_colors
 end
 
-function select_function(function_name:: String)
-    if function_name == "plot_pins"
-        return StringArt.plot_pins
-    elseif function_name == "plot_chords"
-        return StringArt.plot_chords
-    elseif function_name == "plot_color"
-        return StringArt.plot_color
-    end
-
-    return x->x
+function select_function(function_name::String)
+    function_map = Dict(
+        "plot_pins" => StringArt.plot_pins,
+        "plot_chords" => StringArt.plot_chords,
+        "plot_color" => StringArt.plot_color
+    )
+    
+    get(function_map, function_name, x->x)
 end
 
 end

@@ -27,7 +27,9 @@ function main()
     input_path, output_path = args["input"], args["output"]
 
     @info "Loading input image '$input_path'"
-    inp = args["color-mode"] ? load_color_image(input_path, args["size"], args["colors"]) : load_image(input_path, args["size"])
+    inp = args["color-mode"] ?
+          StringArt.load_color_image(input_path, args["size"], args["colors"]) :
+          StringArt.load_image(input_path, args["size"])
 
     @info "Generating chords and pins positions"
     png, svg, gif = StringArt.run(inp, args)
@@ -36,7 +38,7 @@ function main()
     save(output_path * ".png", png)
 
     args["svg"] && let
-        @info "Saving final output as a PNG..."
+        @info "Saving final output as a SVG..."
         StringArt.save_svg(output_path, svg)
     end
 
@@ -50,7 +52,10 @@ end
 
 function parse_cmd()
     # Create an argument parser
-    parser = ArgParseSettings()
+    parser = ArgParseSettings(
+        description="StringArt - Convert images to string art",
+        epilog="Example: julia main.jl -i input.jpg -o output --svg"
+    )
     # Add arguments to the parser
     @add_arg_table parser begin
         "--input", "-i"
@@ -58,7 +63,7 @@ function parse_cmd()
         arg_type = String
         required = true
         "--output", "-o"
-        help = "output image path whiteout extension"
+        help = "output image path without extension"
         arg_type = String
         default = "output"
         "--gif"
@@ -95,7 +100,7 @@ function parse_cmd()
         arg_type = String
         default = nothing
         "--use-color-pallet"
-        help = "[WIP] extract a color pallet from the image to be use in color-mode"
+        help = "extract a color palette from the image to be used in color-mode"
         arg_type = Int
         default = nothing
         "--verbose"
@@ -107,7 +112,6 @@ end
 
 function parse_colors(colors::String)::StringArt.Colors
     to_color(c) = parse(RGB{N0f8}, c)
-    # default value for colors
     rgb_colors = [RGB{N0f8}(1.0, 0.0, 0.0), RGB{N0f8}(0.0, 1.0, 0.0), RGB{N0f8}(0.0, 0.0, 1.0)]
     try
         rgb_colors = map(to_color, split(colors, ","))
@@ -136,11 +140,6 @@ function args_postprocessing(args)::Dict{String,Any}
     else
         # run in greyscale mode
         args["colors"] = parse_colors("#000000")
-    end
-
-    # svg doesn't support gif mode
-    if args["svg"]
-        args["gif"] = false
     end
 
     return args
