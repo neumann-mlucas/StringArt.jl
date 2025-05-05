@@ -5,6 +5,7 @@ include("stringart.jl")
 using .StringArt
 
 using ArgParse
+using Clustering
 using FileIO
 using Images
 using Logging
@@ -18,20 +19,17 @@ function main()
         ENV["JULIA_DEBUG"] = Main
     end
 
-    # handle color options
+    @info "Parsing command line arguments..."
     args = args_postprocessing(args)
-
-    @debug "Parsed arguments: $args"
-
-    # use command line options to define algorithm parameters
     input_path, output_path = args["input"], args["output"]
+    @debug "Parsed arguments: $args"
 
     @info "Loading input image '$input_path'"
     inp = args["color-mode"] ?
           StringArt.load_color_image(input_path, args["size"], args["colors"]) :
           StringArt.load_image(input_path, args["size"])
 
-    @info "Generating chords and pins positions"
+    @info "Running StringArt algorithm..."
     png, svg, gif = StringArt.run(inp, args)
 
     @info "Saving final output as a PNG..."
@@ -99,7 +97,7 @@ function parse_cmd()
         help = "HEX code of colors to use in RGB mode"
         arg_type = String
         default = nothing
-        "--use-color-pallet"
+        "--color-pallet"
         help = "extract a color palette from the image to be used in color-mode"
         arg_type = Int
         default = nothing
@@ -121,16 +119,29 @@ function parse_colors(colors::String)::StringArt.Colors
     return rgb_colors
 end
 
+function get_pallet(args::Dict{String,Any})::Vector{RGB{N0f8}}
+    # load image
+    image_path = args["input"]
+    @assert isfile(image_path) "Image file not found: $image_path"
+    img = convert.(Lab{Float64}, Images.load(image_path))
+    # get collor pallet with kmeans algorithm
+    pixels = reshape(collect(channelview(img)), 3, :)
+    result = kmeans(pixels, args["color-pallet"], maxiter=100, display=:none)
+    # convert back to RGB colors
+    lab_colors = [Lab{Float64}(c...) for c in eachcol(result.centers)]
+    convert.(RGB{N0f8}, lab_colors)
+end
+
 function args_postprocessing(args)::Dict{String,Any}
     # if color related argument is passed, run in RGB mode
-    if !isnothing(args["custom-colors"]) || !isnothing(args["use-color-pallet"])
+    if !isnothing(args["custom-colors"]) || !isnothing(args["color-pallet"])
         args["color-mode"] = true
     end
 
     # parse colors from cmd arguments
-    if !isnothing(args["use-color-pallet"])
+    if !isnothing(args["color-pallet"])
         # WIP, not implemented yet
-        args["colors"] = parse_colors(args["custom-colors"])
+        args["colors"] = get_pallet(args)
     elseif !isnothing(args["custom-colors"])
         # try to parse custom RGB colors
         args["colors"] = parse_colors(args["custom-colors"])
@@ -142,6 +153,7 @@ function args_postprocessing(args)::Dict{String,Any}
         args["colors"] = parse_colors("#000000")
     end
 
+    @show args["colors"]
     return args
 end
 
