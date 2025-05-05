@@ -14,8 +14,9 @@ const RGBImage = Matrix{RGB{N0f8}}
 const Colors = Vector{RGB{N0f8}}
 const DefaultArgs = Dict{String,Any}
 
-const INTERVAL = 20
-const SMALL_CHORD_CUTOFF = 0.1
+const GIF_INTERVAL = 10
+const RANDOMIZED_PIN_INTERVAL = 100
+const SMALL_CHORD_CUTOFF = 0.15
 
 export load_color_image
 export load_image
@@ -92,7 +93,7 @@ function run(input::Vector{GrayImage}, args::DefaultArgs)::Tuple{RGBImage,String
                 push!(svg, draw_line(chord, color, args))
             end
             # save gif frame
-            if args["gif"] && n % INTERVAL == 0
+            if args["gif"] && n % GIF_INTERVAL == 0
                 save_frame(complement.(png), gif)
             end
         end
@@ -105,6 +106,7 @@ end
 function run_algorithm(input::GrayImage, args::DefaultArgs)::Vector{Chord}
     @debug "Generating chords and pins positions"
     output = Vector{Chord}()
+
     pins = gen_pins(args["pins"], args["size"])
     pin2chords = Dict(p => gen_chords(p, pins, args["size"]) for p in pins)
 
@@ -112,13 +114,18 @@ function run_algorithm(input::GrayImage, args::DefaultArgs)::Vector{Chord}
     pin = rand(pins)
     for step = 1:args["steps"]
         @debug "Step: $step"
-        if step % INTERVAL == 0
+        if step % RANDOMIZED_PIN_INTERVAL == 0
             pin = rand(pins)
         end
 
         @debug "Generating chord images..."
         chords = pin2chords[pin]
         imgs = [gen_img(c, args) for c in chords]
+
+        if length(imgs) == 0
+            @debug "No chords left, breaking..."
+            break
+        end
 
         @debug "Calculating error in chords..."
         error, idx = select_best_chord(input, imgs)
@@ -129,6 +136,8 @@ function run_algorithm(input::GrayImage, args::DefaultArgs)::Vector{Chord}
         add_imgs!(input, img)
         push!(output, chord)
 
+        # don't draw the same chord again
+        filter!(c -> c != chord, pin2chords[pin])
         # use the second point of the chord as the next pin
         pin = (chord.first == pin) ? chord.second : chord.first
     end
@@ -158,12 +167,9 @@ end
 
 """ Create an ordered chord (pair of points). """
 function to_chord(p::Point, q::Point)::Chord
-    # pair should be ordered so it can be searched
-    if real(p) > real(q) || (real(p) == real(q) && imag(p) > imag(q))
-        return Pair(q, p)
-    else
-        return Pair(p, q)
-    end
+    # pair should be order so it can be searched
+    p, q = sort([p, q], by=x -> (real(x), imag(x)))
+    return Pair(p, q)
 end
 
 """ Generate grayscale image representing a line between two points. """
@@ -175,8 +181,7 @@ end
     p, q = chord
     a, b = get_coefficients(p, q)
 
-    n_points = size
-    x = LinRange(real(p), real(q), n_points)
+    x = LinRange(real(p), real(q), size)
     y = clamp.(a .* x .+ b, 1, size)
 
     # convert to the corresponding pixel position
@@ -204,19 +209,9 @@ function select_best_chord(img::GrayImage, curves::Vector{GrayImage})::Tuple{Flo
     # apply error function to all images and find the minimum
     cimg = complement.(img)
     errors = Vector{Float32}(undef, length(curves))
-
-    # Use batch processing for better cache efficiency
-    batch_size = max(1, div(length(curves), nthreads()))
-
-    @threads for t in 1:nthreads()
-        start_idx = (t - 1) * batch_size + 1
-        end_idx = min(t * batch_size, length(curves))
-
-        for i in start_idx:end_idx
-            @inbounds errors[i] = Images.ssd(cimg, curves[i])
-        end
+    @threads for i in eachindex(curves)
+        @inbounds errors[i] = Images.ssd(cimg, curves[i])
     end
-
     findmin(errors)
 end
 

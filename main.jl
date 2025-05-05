@@ -153,7 +153,6 @@ function args_postprocessing(args)::Dict{String,Any}
         args["colors"] = parse_colors("#000000")
     end
 
-    @show args["colors"]
     return args
 end
 
