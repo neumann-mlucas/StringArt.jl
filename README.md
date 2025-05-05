@@ -97,7 +97,7 @@ usage: main.jl -i INPUT [-o OUTPUT] [--gif] [--svg] [--color-mode]
                [-s SIZE] [-n PINS] [--steps STEPS]
                [--line-strength LINE-STRENGTH] [--blur BLUR]
                [--custom-colors CUSTOM-COLORS]
-               [--color-pallet COLOR-PALLET] [--verbose] [-h]
+               [--color-palette COLOR-PALETTE] [--verbose] [-h]
 
 StringArt - Convert images to string art
 
@@ -121,7 +121,7 @@ optional arguments:
                         default: 1)
   --custom-colors CUSTOM-COLORS
                         HEX code of colors to use in RGB mode
-  --color-pallet USE-COLOR-PALLET
+  --color-palette USE-COLOR-PALETTE
                         extract a color palette from the image to be
                         used in color-mode (type: Int64)
   --verbose             verbose mode

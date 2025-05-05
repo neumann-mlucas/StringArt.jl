@@ -97,7 +97,7 @@ function parse_cmd()
         help = "HEX code of colors to use in RGB mode"
         arg_type = String
         default = nothing
-        "--color-pallet"
+        "--color-palette"
         help = "extract a color palette from the image to be used in color-mode"
         arg_type = Int
         default = nothing
@@ -119,14 +119,14 @@ function parse_colors(colors::String)::StringArt.Colors
     return rgb_colors
 end
 
-function get_pallet(args::Dict{String,Any})::Vector{RGB{N0f8}}
+function get_palette(args::Dict{String,Any})::Vector{RGB{N0f8}}
     # load image
     image_path = args["input"]
     @assert isfile(image_path) "Image file not found: $image_path"
     img = convert.(Lab{Float64}, Images.load(image_path))
-    # get collor pallet with kmeans algorithm
+    # get collor palette with kmeans algorithm
     pixels = reshape(collect(channelview(img)), 3, :)
-    result = kmeans(pixels, args["color-pallet"], maxiter=100, display=:none)
+    result = kmeans(pixels, args["color-palette"], maxiter=100, display=:none)
     # convert back to RGB colors
     lab_colors = [Lab{Float64}(c...) for c in eachcol(result.centers)]
     convert.(RGB{N0f8}, lab_colors)
@@ -134,14 +134,14 @@ end
 
 function args_postprocessing(args)::Dict{String,Any}
     # if color related argument is passed, run in RGB mode
-    if !isnothing(args["custom-colors"]) || !isnothing(args["color-pallet"])
+    if !isnothing(args["custom-colors"]) || !isnothing(args["color-palette"])
         args["color-mode"] = true
     end
 
     # parse colors from cmd arguments
-    if !isnothing(args["color-pallet"])
+    if !isnothing(args["color-palette"])
         # WIP, not implemented yet
-        args["colors"] = get_pallet(args)
+        args["colors"] = get_palette(args)
     elseif !isnothing(args["custom-colors"])
         # try to parse custom RGB colors
         args["colors"] = parse_colors(args["custom-colors"])
