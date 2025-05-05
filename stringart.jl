@@ -17,6 +17,7 @@ const DefaultArgs = Dict{String,Any}
 const GIF_INTERVAL = 10
 const RANDOMIZED_PIN_INTERVAL = 100
 const SMALL_CHORD_CUTOFF = 0.15
+const EXCLUDE_REPEATED_PINS = false
 
 export load_color_image
 export load_image
@@ -122,7 +123,7 @@ function run_algorithm(input::GrayImage, args::DefaultArgs)::Vector{Chord}
         chords = pin2chords[pin]
         imgs = [gen_img(c, args) for c in chords]
 
-        if length(imgs) == 0
+        if EXCLUDE_REPEATED_PINS && length(imgs) == 0
             @debug "No chords left, breaking..."
             break
         end
@@ -137,7 +138,7 @@ function run_algorithm(input::GrayImage, args::DefaultArgs)::Vector{Chord}
         push!(output, chord)
 
         # don't draw the same chord again
-        filter!(c -> c != chord, pin2chords[pin])
+        EXCLUDE_REPEATED_PINS && filter!(c -> c != chord, pin2chords[pin])
         # use the second point of the chord as the next pin
         pin = (chord.first == pin) ? chord.second : chord.first
     end
@@ -206,11 +207,15 @@ end
 
 """ Find best chord that minimizes difference to target image. """
 function select_best_chord(img::GrayImage, curves::Vector{GrayImage})::Tuple{Float32,Int}
-    # apply error function to all images and find the minimum
+    chunks = [i:min(i + div(length(curves), nthreads()) - 1, length(curves)) for i in 1:div(length(curves), nthreads()):length(curves)]
+
     cimg = complement.(img)
-    errors = Vector{Float32}(undef, length(curves))
-    @threads for i in eachindex(curves)
-        @inbounds errors[i] = Images.ssd(cimg, curves[i])
+    errors = fill(Inf32, length(curves))
+    # Use batch processing for better cache efficiency
+    @threads for t in eachindex(chunks)
+        for i in chunks[t]
+            @inbounds errors[i] = Images.ssd(cimg, curves[i])
+        end
     end
     findmin(errors)
 end
@@ -255,7 +260,7 @@ end
 """ Initialize gif wrapper for given step count and color mode. """
 function gen_gif_wrapper(args::Dict)::GifWrapper
     n_colors = length(args["colors"])
-    n_frames = n_colors * div(args["steps"], INTERVAL)
+    n_frames = n_colors * div(args["steps"], GIF_INTERVAL)
     frames = Array{RGB{N0f8}}(undef, args["size"], args["size"], n_frames)
     GifWrapper(frames, 1)
 end
