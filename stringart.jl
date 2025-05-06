@@ -6,6 +6,7 @@ using Images
 using Logging
 using Memoize
 using Printf
+using Random
 
 const Point = ComplexF64
 const Chord = Pair{Point,Point}
@@ -15,8 +16,8 @@ const Colors = Vector{RGB{N0f8}}
 const DefaultArgs = Dict{String,Any}
 
 const GIF_INTERVAL = 10
-const RANDOMIZED_PIN_INTERVAL = 100
-const SMALL_CHORD_CUTOFF = 0.15
+const RANDOMIZED_PIN_INTERVAL = 20
+const SMALL_CHORD_CUTOFF = 0.10
 const EXCLUDE_REPEATED_PINS = false
 
 export load_color_image
@@ -75,28 +76,35 @@ end
 
 """ Main function to generate string art image. Returns final image in png, svg and gif formats. """
 function run(input::Vector{GrayImage}, args::DefaultArgs)::Tuple{RGBImage,String,GifWrapper}
+    # generate all chords to be draw in the canvas
+    chords = Tuple[]
+    for (color, img) in zip(args["colors"], input)
+        save(hex(color) * "_b.png", img)
+        for chord in run_algorithm(img, args)
+            push!(chords, (chord, color))
+        end
+        save(hex(color) * "_a.png", img)
+    end
+    shuffle!(chords)
+
+    # initialize output image
+    png = zeros(RGB{N0f8}, args["size"], args["size"])
     # create struct that holds gif frames
     gif = gen_gif_wrapper(args)
     # initialize svg content
     svg = [svg_header(args)]
-    # initialize output image
-    png = zeros(RGB{N0f8}, args["size"], args["size"])
-    for (color, img) in zip(args["colors"], input)
-        # find chords to be draw
-        chords = run_algorithm(img, args)
-        # draw each chord
-        for (n, chord) in enumerate(chords)
-            # add chord to png image
-            img = gen_img(chord, args) .* complement(color)
-            add_imgs!(png, img)
-            # draw svg shape
-            if args["svg"]
-                push!(svg, draw_line(chord, color, args))
-            end
-            # save gif frame
-            if args["gif"] && n % GIF_INTERVAL == 0
-                save_frame(complement.(png), gif)
-            end
+
+    for (n, (chord, color)) in enumerate(chords)
+        # add chord to png image
+        img = gen_img(chord, args) .* complement(color)
+        add_imgs!(png, img)
+        # draw svg shape
+        if args["svg"]
+            push!(svg, draw_line(chord, color, args))
+        end
+        # save gif frame
+        if args["gif"] && n % GIF_INTERVAL == 0
+            save_frame(complement.(png), gif)
         end
     end
     push!(svg, "</svg>")
@@ -259,6 +267,9 @@ end
 
 """ Initialize gif wrapper for given step count and color mode. """
 function gen_gif_wrapper(args::Dict)::GifWrapper
+    if !args["gif"]
+        return GifWrapper(Array{RGB{N0f8}}(undef, 0, 0, 0), 0)
+    end
     n_colors = length(args["colors"])
     n_frames = n_colors * div(args["steps"], GIF_INTERVAL)
     frames = Array{RGB{N0f8}}(undef, args["size"], args["size"], n_frames)
@@ -270,10 +281,9 @@ function svg_header(args::DefaultArgs)::String
     size = args["size"]
     blur = args["blur"]
     """<svg xmlns="http://www.w3.org/2000/svg" width="$size" height="$size" viewBox="0 0 $size $size">
-        <filter id="blur">
-            <feGaussianBlur stdDeviation="$blur" />
-        </filter>
-    """
+    <filter id="blur">
+        <feGaussianBlur stdDeviation="$blur" />
+    </filter>"""
 end
 
 """ Draw a line in SVG format. """
