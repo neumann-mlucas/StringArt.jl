@@ -15,8 +15,8 @@ const RGBImage = Matrix{RGB{N0f8}}
 const Colors = Vector{RGB{N0f8}}
 const DefaultArgs = Dict{String,Any}
 
-const GIF_INTERVAL = 10
-const RANDOMIZED_PIN_INTERVAL = 20
+const GIF_INTERVAL = 50
+const RANDOMIZED_PIN_INTERVAL = 100
 const SMALL_CHORD_CUTOFF = 0.10
 const EXCLUDE_REPEATED_PINS = false
 
@@ -56,11 +56,22 @@ function load_color_image(image_path::String, size::Int, colors::Colors)::Vector
     # Resize the image to the specified dimensions
     img = crop_to_square(img)
     img = Images.imresize(img, size, size)
-    # Extract colors from Image and convert to gray scale
-    extract_color(color) = Gray{N0f8}.(mapc.(*, img, color))
-    map(extract_color, colors)
-end
 
+    # Convert to Lab color space
+    lab_img = convert.(Lab, img)
+    lab_colors = convert.(Lab, colors)
+
+    # Extract each color channel based on color distance in Lab space
+    extract_channel(c) = begin
+        distance_map = map(lab_img) do p
+            d = sqrt((p.l - c.l)^2 + (p.a - c.a)^2 + (p.b - c.b)^2)
+            return complement(N0f8(clamp01(1 - min(d / 170, 1))))
+        end
+        return distance_map
+    end
+
+    return map(extract_channel, lab_colors)
+end
 
 """ Crop rectangular image to a centered square. """
 function crop_to_square(image::Matrix)::Matrix
@@ -79,11 +90,10 @@ function run(input::Vector{GrayImage}, args::DefaultArgs)::Tuple{RGBImage,String
     # generate all chords to be draw in the canvas
     chords = Tuple[]
     for (color, img) in zip(args["colors"], input)
-        save(hex(color) * "_b.png", img)
+        @info "Iterating image with color: #$(hex(color))"
         for chord in run_algorithm(img, args)
             push!(chords, (chord, color))
         end
-        save(hex(color) * "_a.png", img)
     end
     shuffle!(chords)
 
@@ -94,6 +104,7 @@ function run(input::Vector{GrayImage}, args::DefaultArgs)::Tuple{RGBImage,String
     # initialize svg content
     svg = [svg_header(args)]
 
+    @info "Rendering Chords"
     for (n, (chord, color)) in enumerate(chords)
         # add chord to png image
         img = gen_img(chord, args) .* complement(color)
@@ -113,6 +124,8 @@ end
 
 """ Core string art generation loop. Produces ordered chords for image approximation. """
 function run_algorithm(input::GrayImage, args::DefaultArgs)::Vector{Chord}
+    steps = div(args["steps"], length(args["colors"]))
+
     @debug "Generating chords and pins positions"
     output = Vector{Chord}()
 
@@ -121,7 +134,7 @@ function run_algorithm(input::GrayImage, args::DefaultArgs)::Vector{Chord}
 
     @debug "Starting algorithm..."
     pin = rand(pins)
-    for step = 1:args["steps"]
+    for step = 1:steps
         @debug "Step: $step"
         if step % RANDOMIZED_PIN_INTERVAL == 0
             pin = rand(pins)
@@ -231,7 +244,7 @@ end
 """ Add grayscale curve image to base image in-place, clipping to [0,1]. """
 function add_imgs!(img::GrayImage, curve::GrayImage)::GrayImage
     # add images clipping values outside the range 0<x<1 (not a valid color)
-    @inbounds for i in eachindex(curve)
+    for i in eachindex(curve)
         if curve[i] != 0
             img[i] = clamp01(float32(img[i]) + float32(curve[i]))
         end
@@ -242,7 +255,7 @@ end
 """ Add RGB images in-place, clipping to [0,1]. """
 function add_imgs!(img::RGBImage, curve::RGBImage)::RGBImage
     # convert to float to prevent int (N0f8) overflow
-    @inbounds for i in eachindex(img)
+    for i in eachindex(img)
         c = curve[i]
         img[i] = RGB{N0f8}(
             clamp01(float32(img[i].r) + float32(c.r)),
