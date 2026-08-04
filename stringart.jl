@@ -21,10 +21,23 @@ const DefaultArgs = Dict{String,Any}
 const GIF_INTERVAL = 50
 const RANDOMIZED_PIN_INTERVAL = 100
 const SMALL_CHORD_CUTOFF = 0.10
-const EXCLUDE_REPEATED_PINS = false
+
+# Thread-safe LRU wrapper: gen_img is called from @threads and LRUCache.LRU
+# is not guaranteed thread-safe across all published versions.
+struct SafeLRU{K,V}
+    lru::LRU{K,V}
+    lock::ReentrantLock
+end
+SafeLRU{K,V}(; maxsize) where {K,V} = SafeLRU{K,V}(LRU{K,V}(maxsize=maxsize), ReentrantLock())
+
+function Base.get!(f::Function, s::SafeLRU{K,V}, key::K) where {K,V}
+    lock(s.lock) do
+        get!(f, s.lru, key)
+    end
+end
 
 # cache needed to store generated chords (very expensive to compute)
-const lru = LRU{Chord, GrayImage}(maxsize=180 * 180)
+const lru = SafeLRU{Chord, GrayImage}(maxsize=180 * 180)
 
 @enum StringArtMode GrayscaleMode RgbMode PaletteMode
 
@@ -50,37 +63,29 @@ function load_image(image_path::String, size::Int, colors::Colors, mode:: String
     load_image(image_path, size, colors, Val(mode))
 end
 
-""" Load and preprocess a grayscale image: crop to square and resize. """
-function load_image(image_path::String, size::Int, colors::Colors, mode:: Val{GrayscaleMode})::Vector{GrayImage}
-    # Read the image and convert it to an array
+""" Load, crop-to-square, and resize an image from disk. """
+function load_and_prep(image_path::String, size::Int)
     @assert isfile(image_path) "Image file not found: $image_path"
     img = Images.load(image_path)
-    # Resize the image to the specified dimensions
     img = crop_to_square(img)
-    img = Images.imresize(img, size, size)
-    # Convert the Image to gray scale and wrap in a vector
+    Images.imresize(img, size, size)
+end
+
+""" Load and preprocess a grayscale image: crop to square and resize. """
+function load_image(image_path::String, size::Int, colors::Colors, mode:: Val{GrayscaleMode})::Vector{GrayImage}
+    img = load_and_prep(image_path, size)
     return [convert(Matrix{N0f8}, Gray{N0f8}.(img))]
 end
 
 """ Load and decompose color image into grayscale channels based on given RGB filters. """
 function load_image(image_path::String, size::Int, colors::Colors, mode:: Val{RgbMode})::Vector{GrayImage}
-    # Read the image and convert it to an array
-    @assert isfile(image_path) "Image file not found: $image_path"
-    img = Images.load(image_path)
-    # Resize the image to the specified dimensions
-    img = crop_to_square(img)
-    img = Images.imresize(img, size, size)
+    img = load_and_prep(image_path, size)
     return [red.(img), green.(img), blue.(img)]
 end
 
 """ Load an image and create a set of grayscale images representing how well each pixel matches the colors in the palette. """
 function load_image(image_path::String, size::Int, colors::Colors, mode:: Val{PaletteMode})::Vector{GrayImage}
-    # Read the image and convert it to an array
-    @assert isfile(image_path) "Image file not found: $image_path"
-    img = Images.load(image_path)
-    # Resize the image to the specified dimensions
-    img = crop_to_square(img)
-    img = Images.imresize(img, size, size)
+    img = load_and_prep(image_path, size)
 
     # Convert the Image and colors to Lab space for better color comparison
     img = convert.(Lab{Float64}, img)
@@ -201,6 +206,7 @@ end
 """ Core string art generation loop. Produces ordered chords for image approximation. """
 function run_algorithm(input::GrayImage, args::DefaultArgs)::Vector{Chord}
     steps = div(args["steps"], length(args["colors"]))
+    exclude_repeated = get(args, "exclude-repeated-pins", false)
 
     @debug "Generating chords and pins positions"
     output = Vector{Chord}()
@@ -219,7 +225,7 @@ function run_algorithm(input::GrayImage, args::DefaultArgs)::Vector{Chord}
         @debug "Generating chord images..."
         chords = pin2chords[pin]
 
-        if EXCLUDE_REPEATED_PINS && length(chords) == 0
+        if exclude_repeated && length(chords) == 0
             @debug "No chords left, breaking..."
             break
         end
@@ -234,7 +240,7 @@ function run_algorithm(input::GrayImage, args::DefaultArgs)::Vector{Chord}
         push!(output, chord)
 
         # don't draw the same chord again
-        EXCLUDE_REPEATED_PINS && filter!(c -> c != chord, pin2chords[pin])
+        exclude_repeated && filter!(c -> c != chord, pin2chords[pin])
         # use the second point of the chord as the next pin
         pin = (chord.first == pin) ? chord.second : chord.first
     end
@@ -245,13 +251,10 @@ end
 function gen_pins(pins::Int, size::Int)::Vector{Point}
     center = (size / 2) + (size / 2) * 1im
     radius = 0.95 * (size / 2)
-    # divide the circle into n_points
-    interval = 360 / pins
-    # calc polar coordinates
-    phi = deg2rad.(0:interval:360)
+    # evenly spaced angles [0, 2π) — no duplicate at 2π
+    phi = 2π .* (0:pins-1) ./ pins
     coords = radius .* exp.(phi .* 1im)
-    # add center to coords and round the values
-    return round.(coords .+ center) |> unique
+    return round.(coords .+ center)
 end
 
 """ Generate valid chords from a given point `p` to other canvas points. """
@@ -271,20 +274,13 @@ end
 
 """ Find best chord that minimizes difference to target image. """
 function select_best_chord(img::GrayImage, chords::Vector{Chord}, args::DefaultArgs)::Tuple{Float64,Int}
-    nchords = length(chords)
-    # Create more balanced chunks based on available threads
-    chunks = [i:min(i + div(nchords, nthreads()) - 1, nchords) for i in 1:div(nchords, nthreads()):nchords]
-
-    # Pre-allocate error array
     cimg = complement.(img)
     errors = fill(Inf32, length(chords))
 
-    # Parallelize the error calculation
-    @threads for t in eachindex(chunks)
-        for i in chunks[t]
-            chord_img = gen_img(chords[i], args)
-            @inbounds errors[i] = @fastmath Images.ssd(cimg, chord_img)
-        end
+    # @threads handles scheduling; avoids div-by-zero when nchords < nthreads()
+    @threads for i in eachindex(chords)
+        chord_img = gen_img(chords[i], args)
+        @inbounds errors[i] = @fastmath Images.ssd(cimg, chord_img)
     end
     return findmin(errors)
 end
@@ -346,20 +342,15 @@ function bresenham_line!(img::Matrix{Gray{N0f8}}, x0::Int, y0::Int, x1::Int, y1:
     y_step = y0 < y1 ? 1 : -1
     y = y0
 
-    # Draw the line pixel by pixel
+    # endpoints are already clamped; interior interpolated y stays in
+    # [min(y0,y1), max(y0,y1)] so per-pixel bounds check is redundant
     for x in x0:x1
-        # If steep, plot (y,x) instead of (x,y)
         if steep
-            if 1 <= y <= width && 1 <= x <= height
-                @inbounds img[x, y] = strength
-            end
+            @inbounds img[x, y] = strength
         else
-            if 1 <= x <= width && 1 <= y <= height
-                @inbounds img[y, x] = strength
-            end
+            @inbounds img[y, x] = strength
         end
 
-        # Update error and possibly y coordinate
         err -= dy
         if err < 0
             y += y_step
@@ -397,8 +388,11 @@ function gen_gif_wrapper(args::Dict)::GifWrapper
     if !args["gif"]
         return GifWrapper(Array{RGBColor}(undef, 0, 0, 0), 0)
     end
+    # exact frame count: run_algorithm produces div(steps, n_colors) chords per
+    # color, save_frame fires every GIF_INTERVAL chords across the shuffled union
     n_colors = length(args["colors"])
-    n_frames = n_colors * div(args["steps"], GIF_INTERVAL)
+    total_chords = n_colors * div(args["steps"], n_colors)
+    n_frames = div(total_chords, GIF_INTERVAL)
     frames = Array{RGBColor}(undef, args["size"], args["size"], n_frames)
     return GifWrapper(frames, 1)
 end

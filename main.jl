@@ -102,6 +102,9 @@ function parse_cmd()
         help = "number of colors to extract as a palette from the input image (k-means clustering)"
         arg_type = Int
         default = nothing
+        "--exclude-repeated-pins"
+        help = "skip chords already drawn (yields noisier / more diffuse output)"
+        action = :store_true
         "--verbose"
         help = "verbose mode"
         action = :store_true

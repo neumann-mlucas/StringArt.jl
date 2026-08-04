@@ -15,51 +15,54 @@ const DefaultArgs = Dict{String,Any}((
     "size" => 500,
     "steps" => 1000,
     "gif" => false,
-    "color" => false,
-    "colors" => "#FF0000,#00FF00,#0000FF",
+    "svg" => false,
 ))
 
 function main()
-    # parse command line arguments
     args = parse_cmd()
 
-    # verbose mode should use debug log level log level
     if args["verbose"]
         ENV["JULIA_DEBUG"] = Main
     end
 
-    # use command line options to define algorithm parameters
     args = merge(DefaultArgs, args)
     input, output = args["input"], args["output"]
 
-    # default colors
     colors = parse_colors(args["colors"])
-    # function to run
-    run = select_function(args["function"])
+    fn_name = args["function"]
 
     @info "Loading input image: '$input'"
-    inp = StringArt.load_image(input, args["size"])
-    if args["function"] == "plot_color"
-        inp = StringArt.load_color_image(input, args["size"], colors)
+
+    if fn_name == "plot_color"
+        args["colors"] = colors
+        inp = StringArt.load_image(input, args["size"], colors, StringArt.RgbMode)
+        @info "Running $fn_name..."
+        out = StringArt.plot_color(inp, args)
+    elseif fn_name == "plot_pins"
+        args["colors"] = [RGB{N0f8}(0,0,0)]
+        inp = StringArt.load_image(input, args["size"], args["colors"], StringArt.GrayscaleMode)[1]
+        @info "Running $fn_name..."
+        out = StringArt.plot_pins(inp, args)
+    elseif fn_name == "plot_chords"
+        args["colors"] = [RGB{N0f8}(0,0,0)]
+        inp = StringArt.load_image(input, args["size"], args["colors"], StringArt.GrayscaleMode)[1]
+        @info "Running $fn_name..."
+        out = StringArt.plot_chords(inp, args)
+    else
+        error("Unknown --function '$fn_name' (expected: plot_pins, plot_chords, plot_color)")
     end
 
-    @info "Running selected function $(args["function"])..."
-    out = run(inp, args)
-
     @info "Saving final output image to: '$output'"
-    out = Gray.(out)
-    save(output * ".png", out)
+    save(output * ".png", Gray.(out))
 
     @info "Done"
 end
 
 function parse_cmd()
-    # Create an argument parser
     parser = ArgParseSettings(
         description="StringArt Utilities - Debug and visualization tools",
         epilog="Example: julia utils.jl -f plot_pins -i input.jpg -o debug"
     )
-    # Add arguments to the parser
     @add_arg_table parser begin
         "--function", "-f"
         help = "util function to execute (plot_pins, plot_chords, plot_color)"
@@ -94,11 +97,8 @@ function parse_cmd()
         arg_type = Int
         default = 1
         "--colors"
-        help = "HEX code of colors to use in RGB mode (comma-separated)"
+        help = "HEX code of colors to use for plot_color (comma-separated)"
         default = "#FF0000,#00FF00,#0000FF"
-        "--color"
-        help = "RGB mode"
-        action = :store_true
         "--gif"
         help = "Save output as a GIF"
         action = :store_true
@@ -111,24 +111,13 @@ end
 
 function parse_colors(colors::String)::StringArt.Colors
     to_color(c) = parse(RGB{N0f8}, c)
-    # default value for colors
-    rgb_colors = [RGB(1,0,0), RGB(0,1,0), RGB(0,0,1)]
+    rgb_colors = [RGB{N0f8}(1,0,0), RGB{N0f8}(0,1,0), RGB{N0f8}(0,0,1)]
     try
-        rgb_colors = map(to_color, split(colors,","))
+        rgb_colors = map(to_color, split(colors, ","))
     catch e
         @error "Unable to parse '$colors' $e"
     end
     return rgb_colors
-end
-
-function select_function(function_name::String)
-    function_map = Dict(
-        "plot_pins" => StringArt.plot_pins,
-        "plot_chords" => StringArt.plot_chords,
-        "plot_color" => StringArt.plot_color
-    )
-    
-    get(function_map, function_name, x->x)
 end
 
 end
