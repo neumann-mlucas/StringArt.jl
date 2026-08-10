@@ -1,0 +1,1176 @@
+
+[pre-p1."girl-pearl::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "b01f5e0e512ed60bb0df32b0d3fe3b9b56d05b30d12ffd8b64f2714920fdb9f2"
+coverage = 0.034137894476446266
+fixture = "girl-pearl"
+pins = 240
+alloc_bytes_100steps = 103279192
+wall_clock_s = 15.865480113
+size = 512
+ssd = 78391.3515625
+phase = "pre-p1"
+
+[pre-p1."girl-pearl::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "10c9bdc5c6ec5a3f0d4f98636234822edafd257cf07d0998c45049c84fe18a04"
+coverage = 0.35869526804961654
+fixture = "girl-pearl"
+pins = 240
+alloc_bytes_100steps = 39969936
+wall_clock_s = 15.389687025
+size = 512
+ssd = 59278.671875
+phase = "pre-p1"
+
+[pre-p1."mona-lisa::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "dc2d82921a05ca2220503ae3735ce7131e6a6c9e51f9bdda129cf1e3d7bfee94"
+coverage = 0.10374101733126673
+fixture = "mona-lisa"
+pins = 240
+alloc_bytes_100steps = 103279256
+wall_clock_s = 18.383736336
+size = 512
+ssd = 62516.81640625
+phase = "pre-p1"
+
+[pre-p1."moon::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "a0c1827d11fb4b3caea7cc35c9648628ad93b0dde794600d9bb8f1be7aadc146"
+coverage = 0.04282616552222624
+fixture = "moon"
+pins = 180
+alloc_bytes_100steps = 2723880
+wall_clock_s = 0.183018875
+size = 256
+ssd = 25563.697265625
+phase = "pre-p1"
+
+[pre-p1."flowers::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "d23e61b82dc11a92e596a4be3e1c2ef606b17d977bc05ebe5c22e33b3f042016"
+coverage = 0.7359291244788565
+fixture = "flowers"
+pins = 240
+alloc_bytes_100steps = 39970224
+wall_clock_s = 14.529217
+size = 512
+ssd = 29496.814453125
+phase = "pre-p1"
+
+[pre-p1."mandrill::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "ab4b5d436679e9e2ba3888b1800358f5b28cfb91ab7b363b26468b640f463bb8"
+coverage = 0.0686245572609209
+fixture = "mandrill"
+pins = 240
+alloc_bytes_100steps = 61680480
+wall_clock_s = 15.463559173
+size = 512
+ssd = 32851.41015625
+phase = "pre-p1"
+
+[pre-p1."van-gogh-self::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "b899fe9c0f6d68d73268f2fbfcd71829c9c3e2754c970725d794c9734d0fff99"
+coverage = 0.42672137936227084
+fixture = "van-gogh-self"
+pins = 240
+alloc_bytes_100steps = 61680256
+wall_clock_s = 15.882822596
+size = 512
+ssd = 17920.8671875
+phase = "pre-p1"
+
+[pre-p1."van-gogh-self::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "1af791b0c9cc955f2d979538459079f200b2bd52fabfe32c579516056578ab75"
+coverage = 0.44241990738997855
+fixture = "van-gogh-self"
+pins = 240
+alloc_bytes_100steps = 103279608
+wall_clock_s = 14.393819374
+size = 512
+ssd = 16255.5078125
+phase = "pre-p1"
+
+[pre-p1."marcus-aurelius::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "63a7fd1517445adc2635164a1067b3d84e75d8e2967358bd7a2a140dcb28b903"
+coverage = 0.007594575731878456
+fixture = "marcus-aurelius"
+pins = 240
+alloc_bytes_100steps = 61680288
+wall_clock_s = 18.876811328
+size = 512
+ssd = 109587.09375
+phase = "pre-p1"
+
+[pre-p1."van-gogh-self::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "3a826f368924423a9f1946c139121c35da7afdc22ce3aa8f9cbdf18f73f11236"
+coverage = 0.6708203139705605
+fixture = "van-gogh-self"
+pins = 240
+alloc_bytes_100steps = 39970064
+wall_clock_s = 12.922202024
+size = 512
+ssd = 19261.140625
+phase = "pre-p1"
+
+[pre-p1."starry-night::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "b2e720bccae049c88e0932945c8465d8d37c2bdc4e8bb7055efe379d01ce0fbb"
+coverage = 0.5906527562385451
+fixture = "starry-night"
+pins = 240
+alloc_bytes_100steps = 39970000
+wall_clock_s = 19.221692175
+size = 512
+ssd = 43313.375
+phase = "pre-p1"
+
+[pre-p1."parrots::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "dd4227f6192ab7189d9bc26e0eeb8efebd68e30f306eb446b333d10f9028c35a"
+coverage = 0.062227316423870443
+fixture = "parrots"
+pins = 240
+alloc_bytes_100steps = 61680256
+wall_clock_s = 14.353052711
+size = 512
+ssd = 41752.1171875
+phase = "pre-p1"
+
+[pre-p1."parrots::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "313a4897a53c27cec16d2158dfbb05c412fe64ba0904c42428ac649c4a66b756"
+coverage = 0.16379501589883902
+fixture = "parrots"
+pins = 240
+alloc_bytes_100steps = 103279576
+wall_clock_s = 13.719764645
+size = 512
+ssd = 37297.2421875
+phase = "pre-p1"
+
+[pre-p1."mandrill::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "73d11810a7eec28c1661b4d527c4075ea77cdc7180ecc5515c83680386f67287"
+coverage = 0.6514167650531287
+fixture = "mandrill"
+pins = 240
+alloc_bytes_100steps = 39970272
+wall_clock_s = 19.22317023
+size = 512
+ssd = 26711.03515625
+phase = "pre-p1"
+
+[pre-p1."great-wave::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "3c9c39b26c82c1256311956ed58f2ebb438f8ee00bea0cf8bc3a8cf8438fc6dd"
+coverage = 0.30227751052315094
+fixture = "great-wave"
+pins = 240
+alloc_bytes_100steps = 61680640
+wall_clock_s = 15.241548631
+size = 512
+ssd = 16458.21875
+phase = "pre-p1"
+
+[pre-p1."aristotle::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "ea8cb6a5d5125e031a41019b798e65e042cb6f87684cab6632de816b7d29446c"
+coverage = 0.679327782213604
+fixture = "aristotle"
+pins = 240
+alloc_bytes_100steps = 39970000
+wall_clock_s = 16.671302545
+size = 512
+ssd = 18220.20703125
+phase = "pre-p1"
+
+[pre-p1."marcus-aurelius::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "929b55c94afb32f873315cc8f45e9da5a0af3c77a679f7d59cf85741becada3d"
+coverage = 0.05552595438751848
+fixture = "marcus-aurelius"
+pins = 240
+alloc_bytes_100steps = 103279896
+wall_clock_s = 15.786162252
+size = 512
+ssd = 98525.015625
+phase = "pre-p1"
+
+[pre-p1."starry-night::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "7af01ef0d1b0470d8d515ae7c3aea532a823c479216a65635e914ba875a31b8c"
+coverage = 0.20210066262512336
+fixture = "starry-night"
+pins = 240
+alloc_bytes_100steps = 103279224
+wall_clock_s = 14.577981487
+size = 512
+ssd = 57715.88671875
+phase = "pre-p1"
+
+[pre-p1."great-wave::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "f5438adf6b2b6b157a9a7f44c57bd6524f392f79673116f78dbafad07535b623"
+coverage = 0.2845394736842105
+fixture = "great-wave"
+pins = 180
+alloc_bytes_100steps = 2724072
+wall_clock_s = 0.079777267
+size = 256
+ssd = 9447.90625
+phase = "pre-p1"
+
+[pre-p1."marcus-aurelius::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "42e6cbfa071e7ba7f2765b86adec43c8ddc9d58a194ab8b6c4f4428eddf8a9e8"
+coverage = 0.14673635517106726
+fixture = "marcus-aurelius"
+pins = 180
+alloc_bytes_100steps = 2723816
+wall_clock_s = 0.264004448
+size = 256
+ssd = 24798.9921875
+phase = "pre-p1"
+
+[pre-p1."hats::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "4da5a4092d5bd47f4e83a3adfb1ed97297521c504a0ff80bfde70c8fbd558a9d"
+coverage = 0.8231885155865308
+fixture = "hats"
+pins = 240
+alloc_bytes_100steps = 39970064
+wall_clock_s = 14.98229429
+size = 512
+ssd = 36347.078125
+phase = "pre-p1"
+
+[pre-p1."mona-lisa::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "5b9710bcf4c48533a8e2cc8a7bc6760f6bb9b3900414401c1170176914bbbff7"
+coverage = 0.005530505847541215
+fixture = "mona-lisa"
+pins = 240
+alloc_bytes_100steps = 61680208
+wall_clock_s = 18.968321987
+size = 512
+ssd = 75623.515625
+phase = "pre-p1"
+
+[pre-p1."moon::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "100054f2b8c6fa862181426149c20e711590504f4cb21c326611b4f0bc049cc9"
+coverage = 0.01859949682520666
+fixture = "moon"
+pins = 240
+alloc_bytes_100steps = 103279288
+wall_clock_s = 16.900828699
+size = 512
+ssd = 101913.53125
+phase = "pre-p1"
+
+[pre-p1."girl-pearl::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "b7b09df5dab022441ed57569b320568a86b88c8cb6c7fb925f1a25cdc32c50d3"
+coverage = 0.002155705551825282
+fixture = "girl-pearl"
+pins = 240
+alloc_bytes_100steps = 61680512
+wall_clock_s = 15.418787805
+size = 512
+ssd = 89645.546875
+phase = "pre-p1"
+
+[pre-p1."starry-night::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "d4e49972f9be866477bb3b25c571a5d2911edeadc22064c670e04872dcd5cd7b"
+coverage = 0.002784435358804455
+fixture = "starry-night"
+pins = 240
+alloc_bytes_100steps = 61680160
+wall_clock_s = 14.9092592
+size = 512
+ssd = 68870.921875
+phase = "pre-p1"
+
+[pre-p1."mona-lisa::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "e7487966d66e4f9a05f50751b717632c7de52065f5ce864191760fddf0089a05"
+coverage = 0.6946244892207976
+fixture = "mona-lisa"
+pins = 240
+alloc_bytes_100steps = 39969648
+wall_clock_s = 15.399312297
+size = 512
+ssd = 41261.828125
+phase = "pre-p1"
+
+[pre-p1."aristotle::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "db264a99361dddc6f03bb9c3e043d914ff9f167b81eaa9cb93bfa5b9a5d34e80"
+coverage = 0.3788829322079008
+fixture = "aristotle"
+pins = 240
+alloc_bytes_100steps = 103279800
+wall_clock_s = 13.079496855
+size = 512
+ssd = 18345.416015625
+phase = "pre-p1"
+
+[pre-p1."aristotle::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "81d83bac84f8a4de2bbb6390b411ed2fc0421f187647c677aa99112fd0ff4c28"
+coverage = 0.525151134937835
+fixture = "aristotle"
+pins = 240
+alloc_bytes_100steps = 61680640
+wall_clock_s = 13.38721932
+size = 512
+ssd = 15632.744140625
+phase = "pre-p1"
+
+[pre-p1."parrots::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "75aa1bba703c11dff6ca09d6edc4165b8f4b36f63c4a1e8e95ee89ecf645d9e9"
+coverage = 0.3911853878577239
+fixture = "parrots"
+pins = 240
+alloc_bytes_100steps = 39969968
+wall_clock_s = 15.74020974
+size = 512
+ssd = 33510.8984375
+phase = "pre-p1"
+
+[pre-p1."mandrill::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "4c30681a633b56488ec2a356592c146bfab7260dcb316f2108205158d961b3f6"
+coverage = 0.2128099173553719
+fixture = "mandrill"
+pins = 240
+alloc_bytes_100steps = 103279736
+wall_clock_s = 15.096308996
+size = 512
+ssd = 27403.556640625
+phase = "pre-p1"
+
+[pre-p1."hats::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "d3e9aeb7408c69f6043c8e51ef3bba13d08164a26588619d4ff7baa9f2480c1d"
+coverage = 0.015719101549183743
+fixture = "hats"
+pins = 240
+alloc_bytes_100steps = 61680512
+wall_clock_s = 15.518874837
+size = 512
+ssd = 59916.7265625
+phase = "pre-p1"
+
+[pre-p1."flowers::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "12bcdd361d753e77a183996b49f71906c695337c594c35f9778d6e90a54176ff"
+coverage = 0.218210244192972
+fixture = "flowers"
+pins = 240
+alloc_bytes_100steps = 103279576
+wall_clock_s = 19.09595065
+size = 512
+ssd = 35835.2890625
+phase = "pre-p1"
+
+[pre-p1."hats::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "f6aa00087c201d0764cb9fefb60d196e2b52a71995d9a8de87e4b8185a943342"
+coverage = 0.09052687398204613
+fixture = "hats"
+pins = 240
+alloc_bytes_100steps = 103279640
+wall_clock_s = 13.879565869
+size = 512
+ssd = 48223.5
+phase = "pre-p1"
+
+[pre-p1."moon::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "b0bdd5b878cf32fe3983e0ba098b0bdaad34ecbf7c551e95113b46ba0788406a"
+coverage = 4.492632083383251e-5
+fixture = "moon"
+pins = 240
+alloc_bytes_100steps = 61680800
+wall_clock_s = 18.611949124
+size = 512
+ssd = 114197.1875
+phase = "pre-p1"
+
+[pre-p1."great-wave::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "8fbbd1480573708b98c85b984badaa2d7b1d5548f69490ba7cb27420e5739ae9"
+coverage = 0.18753758268190018
+fixture = "great-wave"
+pins = 240
+alloc_bytes_100steps = 103279672
+wall_clock_s = 15.589612338
+size = 512
+ssd = 23786.234375
+phase = "pre-p1"
+
+[pre-p1."flowers::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "c577a2f5f95efe74596fa9fed840190434616065175749377c7e4aa183d00a17"
+coverage = 0.07057772483621202
+fixture = "flowers"
+pins = 240
+alloc_bytes_100steps = 61680224
+wall_clock_s = 16.231566002
+size = 512
+ssd = 43022.88671875
+phase = "pre-p1"
+
+[c1-tuple."girl-pearl::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "b01f5e0e512ed60bb0df32b0d3fe3b9b56d05b30d12ffd8b64f2714920fdb9f2"
+coverage = 0.034137894476446266
+fixture = "girl-pearl"
+pins = 240
+alloc_bytes_100steps = 45668920
+wall_clock_s = 14.478458742
+size = 512
+ssd = 78391.3515625
+phase = "c1-tuple"
+
+[c1-tuple."girl-pearl::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "10c9bdc5c6ec5a3f0d4f98636234822edafd257cf07d0998c45049c84fe18a04"
+coverage = 0.35869526804961654
+fixture = "girl-pearl"
+pins = 240
+alloc_bytes_100steps = 31576272
+wall_clock_s = 14.646113312
+size = 512
+ssd = 59278.671875
+phase = "c1-tuple"
+
+[c1-tuple."mona-lisa::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "dc2d82921a05ca2220503ae3735ce7131e6a6c9e51f9bdda129cf1e3d7bfee94"
+coverage = 0.10374101733126673
+fixture = "mona-lisa"
+pins = 240
+alloc_bytes_100steps = 45668984
+wall_clock_s = 12.369496772
+size = 512
+ssd = 62516.81640625
+phase = "c1-tuple"
+
+[c1-tuple."moon::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "9b02e8638609bba183b71a6afa02aa516f684277bcafa9eca2a2bacc769b6534"
+coverage = 0.1802294237450581
+fixture = "moon"
+pins = 240
+alloc_bytes_100steps = 31576832
+wall_clock_s = 15.979573583
+size = 512
+ssd = 79980.453125
+phase = "c1-tuple"
+
+[c1-tuple."flowers::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "d23e61b82dc11a92e596a4be3e1c2ef606b17d977bc05ebe5c22e33b3f042016"
+coverage = 0.7359291244788565
+fixture = "flowers"
+pins = 240
+alloc_bytes_100steps = 31576560
+wall_clock_s = 15.568533811
+size = 512
+ssd = 29496.814453125
+phase = "c1-tuple"
+
+[c1-tuple."mandrill::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "ab4b5d436679e9e2ba3888b1800358f5b28cfb91ab7b363b26468b640f463bb8"
+coverage = 0.0686245572609209
+fixture = "mandrill"
+pins = 240
+alloc_bytes_100steps = 33601488
+wall_clock_s = 14.044427874
+size = 512
+ssd = 32851.41015625
+phase = "c1-tuple"
+
+[c1-tuple."van-gogh-self::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "b899fe9c0f6d68d73268f2fbfcd71829c9c3e2754c970725d794c9734d0fff99"
+coverage = 0.42672137936227084
+fixture = "van-gogh-self"
+pins = 240
+alloc_bytes_100steps = 33601264
+wall_clock_s = 14.133449571
+size = 512
+ssd = 17920.8671875
+phase = "c1-tuple"
+
+[c1-tuple."van-gogh-self::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "1af791b0c9cc955f2d979538459079f200b2bd52fabfe32c579516056578ab75"
+coverage = 0.44241990738997855
+fixture = "van-gogh-self"
+pins = 240
+alloc_bytes_100steps = 45669336
+wall_clock_s = 14.104749113
+size = 512
+ssd = 16255.5078125
+phase = "c1-tuple"
+
+[c1-tuple."marcus-aurelius::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "63a7fd1517445adc2635164a1067b3d84e75d8e2967358bd7a2a140dcb28b903"
+coverage = 0.007594575731878456
+fixture = "marcus-aurelius"
+pins = 240
+alloc_bytes_100steps = 33601296
+wall_clock_s = 13.064538032
+size = 512
+ssd = 109587.09375
+phase = "c1-tuple"
+
+[c1-tuple."van-gogh-self::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "3a826f368924423a9f1946c139121c35da7afdc22ce3aa8f9cbdf18f73f11236"
+coverage = 0.6708203139705605
+fixture = "van-gogh-self"
+pins = 240
+alloc_bytes_100steps = 31576400
+wall_clock_s = 14.123780853
+size = 512
+ssd = 19261.140625
+phase = "c1-tuple"
+
+[c1-tuple."starry-night::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "b2e720bccae049c88e0932945c8465d8d37c2bdc4e8bb7055efe379d01ce0fbb"
+coverage = 0.5906527562385451
+fixture = "starry-night"
+pins = 240
+alloc_bytes_100steps = 31576336
+wall_clock_s = 13.965404997
+size = 512
+ssd = 43313.375
+phase = "c1-tuple"
+
+[c1-tuple."parrots::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "dd4227f6192ab7189d9bc26e0eeb8efebd68e30f306eb446b333d10f9028c35a"
+coverage = 0.062227316423870443
+fixture = "parrots"
+pins = 240
+alloc_bytes_100steps = 33601264
+wall_clock_s = 13.601768039
+size = 512
+ssd = 41752.1171875
+phase = "c1-tuple"
+
+[c1-tuple."parrots::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "313a4897a53c27cec16d2158dfbb05c412fe64ba0904c42428ac649c4a66b756"
+coverage = 0.16379501589883902
+fixture = "parrots"
+pins = 240
+alloc_bytes_100steps = 45669304
+wall_clock_s = 14.700356823
+size = 512
+ssd = 37297.2421875
+phase = "c1-tuple"
+
+[c1-tuple."mandrill::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "73d11810a7eec28c1661b4d527c4075ea77cdc7180ecc5515c83680386f67287"
+coverage = 0.6514167650531287
+fixture = "mandrill"
+pins = 240
+alloc_bytes_100steps = 31576112
+wall_clock_s = 19.388321597
+size = 512
+ssd = 26711.03515625
+phase = "c1-tuple"
+
+[c1-tuple."great-wave::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "3c9c39b26c82c1256311956ed58f2ebb438f8ee00bea0cf8bc3a8cf8438fc6dd"
+coverage = 0.30227751052315094
+fixture = "great-wave"
+pins = 240
+alloc_bytes_100steps = 33601648
+wall_clock_s = 21.676203558
+size = 512
+ssd = 16458.21875
+phase = "c1-tuple"
+
+[c1-tuple."aristotle::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "ea8cb6a5d5125e031a41019b798e65e042cb6f87684cab6632de816b7d29446c"
+coverage = 0.679327782213604
+fixture = "aristotle"
+pins = 240
+alloc_bytes_100steps = 31576336
+wall_clock_s = 15.490686656
+size = 512
+ssd = 18220.20703125
+phase = "c1-tuple"
+
+[c1-tuple."marcus-aurelius::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "929b55c94afb32f873315cc8f45e9da5a0af3c77a679f7d59cf85741becada3d"
+coverage = 0.05552595438751848
+fixture = "marcus-aurelius"
+pins = 240
+alloc_bytes_100steps = 45669624
+wall_clock_s = 12.392824602
+size = 512
+ssd = 98525.015625
+phase = "c1-tuple"
+
+[c1-tuple."starry-night::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "7af01ef0d1b0470d8d515ae7c3aea532a823c479216a65635e914ba875a31b8c"
+coverage = 0.20210066262512336
+fixture = "starry-night"
+pins = 240
+alloc_bytes_100steps = 45668952
+wall_clock_s = 13.199968237
+size = 512
+ssd = 57715.88671875
+phase = "c1-tuple"
+
+[c1-tuple."great-wave::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "893d287c1dd956df74bd330b75b716afd00074854f5fc4f4c8f99e59f99dddcc"
+coverage = 0.5628006614552015
+fixture = "great-wave"
+pins = 240
+alloc_bytes_100steps = 31576592
+wall_clock_s = 26.994459549
+size = 512
+ssd = 24679.548828125
+phase = "c1-tuple"
+
+[c1-tuple."marcus-aurelius::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "abd5902e0aaa6e4523e177cc61bfdc02769fdde8205f93a9f02885a3bc3576ca"
+coverage = 0.3768020232189894
+fixture = "marcus-aurelius"
+pins = 240
+alloc_bytes_100steps = 31576336
+wall_clock_s = 291.816514934
+size = 512
+ssd = 79834.34375
+phase = "c1-tuple"
+
+[c1-tuple."hats::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "4da5a4092d5bd47f4e83a3adfb1ed97297521c504a0ff80bfde70c8fbd558a9d"
+coverage = 0.8231885155865308
+fixture = "hats"
+pins = 240
+alloc_bytes_100steps = 31576400
+wall_clock_s = 14.868764134
+size = 512
+ssd = 36347.078125
+phase = "c1-tuple"
+
+[c1-tuple."mona-lisa::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "5b9710bcf4c48533a8e2cc8a7bc6760f6bb9b3900414401c1170176914bbbff7"
+coverage = 0.005530505847541215
+fixture = "mona-lisa"
+pins = 240
+alloc_bytes_100steps = 33601200
+wall_clock_s = 12.770094684
+size = 512
+ssd = 75623.515625
+phase = "c1-tuple"
+
+[c1-tuple."moon::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "100054f2b8c6fa862181426149c20e711590504f4cb21c326611b4f0bc049cc9"
+coverage = 0.01859949682520666
+fixture = "moon"
+pins = 240
+alloc_bytes_100steps = 45669208
+wall_clock_s = 15.858498983
+size = 512
+ssd = 101913.53125
+phase = "c1-tuple"
+
+[c1-tuple."girl-pearl::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "b7b09df5dab022441ed57569b320568a86b88c8cb6c7fb925f1a25cdc32c50d3"
+coverage = 0.002155705551825282
+fixture = "girl-pearl"
+pins = 240
+alloc_bytes_100steps = 33601328
+wall_clock_s = 14.873620708
+size = 512
+ssd = 89645.546875
+phase = "c1-tuple"
+
+[c1-tuple."starry-night::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "d4e49972f9be866477bb3b25c571a5d2911edeadc22064c670e04872dcd5cd7b"
+coverage = 0.002784435358804455
+fixture = "starry-night"
+pins = 240
+alloc_bytes_100steps = 33601168
+wall_clock_s = 11.999594548
+size = 512
+ssd = 68870.921875
+phase = "c1-tuple"
+
+[c1-tuple."mona-lisa::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "e7487966d66e4f9a05f50751b717632c7de52065f5ce864191760fddf0089a05"
+coverage = 0.6946244892207976
+fixture = "mona-lisa"
+pins = 240
+alloc_bytes_100steps = 31575984
+wall_clock_s = 13.272065897
+size = 512
+ssd = 41261.828125
+phase = "c1-tuple"
+
+[c1-tuple."aristotle::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "db264a99361dddc6f03bb9c3e043d914ff9f167b81eaa9cb93bfa5b9a5d34e80"
+coverage = 0.3788829322079008
+fixture = "aristotle"
+pins = 240
+alloc_bytes_100steps = 45669528
+wall_clock_s = 13.406979447
+size = 512
+ssd = 18345.416015625
+phase = "c1-tuple"
+
+[c1-tuple."aristotle::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "81d83bac84f8a4de2bbb6390b411ed2fc0421f187647c677aa99112fd0ff4c28"
+coverage = 0.525151134937835
+fixture = "aristotle"
+pins = 240
+alloc_bytes_100steps = 33601648
+wall_clock_s = 13.247564652
+size = 512
+ssd = 15632.744140625
+phase = "c1-tuple"
+
+[c1-tuple."parrots::grayscale"]
+steps = 1500
+tier = "full"
+mode = "grayscale"
+sha256 = "75aa1bba703c11dff6ca09d6edc4165b8f4b36f63c4a1e8e95ee89ecf645d9e9"
+coverage = 0.3911853878577239
+fixture = "parrots"
+pins = 240
+alloc_bytes_100steps = 31576304
+wall_clock_s = 12.499926536
+size = 512
+ssd = 33510.8984375
+phase = "c1-tuple"
+
+[c1-tuple."mandrill::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "4c30681a633b56488ec2a356592c146bfab7260dcb316f2108205158d961b3f6"
+coverage = 0.2128099173553719
+fixture = "mandrill"
+pins = 240
+alloc_bytes_100steps = 45669464
+wall_clock_s = 14.309940847
+size = 512
+ssd = 27403.556640625
+phase = "c1-tuple"
+
+[c1-tuple."hats::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "d3e9aeb7408c69f6043c8e51ef3bba13d08164a26588619d4ff7baa9f2480c1d"
+coverage = 0.015719101549183743
+fixture = "hats"
+pins = 240
+alloc_bytes_100steps = 33601520
+wall_clock_s = 14.154319599
+size = 512
+ssd = 59916.7265625
+phase = "c1-tuple"
+
+[c1-tuple."flowers::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "12bcdd361d753e77a183996b49f71906c695337c594c35f9778d6e90a54176ff"
+coverage = 0.218210244192972
+fixture = "flowers"
+pins = 240
+alloc_bytes_100steps = 45669304
+wall_clock_s = 14.567968301
+size = 512
+ssd = 35835.2890625
+phase = "c1-tuple"
+
+[c1-tuple."hats::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "f6aa00087c201d0764cb9fefb60d196e2b52a71995d9a8de87e4b8185a943342"
+coverage = 0.09052687398204613
+fixture = "hats"
+pins = 240
+alloc_bytes_100steps = 45669368
+wall_clock_s = 15.591883887
+size = 512
+ssd = 48223.5
+phase = "c1-tuple"
+
+[c1-tuple."moon::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "b0bdd5b878cf32fe3983e0ba098b0bdaad34ecbf7c551e95113b46ba0788406a"
+coverage = 4.492632083383251e-5
+fixture = "moon"
+pins = 240
+alloc_bytes_100steps = 33601552
+wall_clock_s = 16.109581211
+size = 512
+ssd = 114197.1875
+phase = "c1-tuple"
+
+[c1-tuple."great-wave::palette6"]
+steps = 1500
+tier = "full"
+mode = "palette6"
+sha256 = "8fbbd1480573708b98c85b984badaa2d7b1d5548f69490ba7cb27420e5739ae9"
+coverage = 0.18753758268190018
+fixture = "great-wave"
+pins = 240
+alloc_bytes_100steps = 45669400
+wall_clock_s = 23.686132484
+size = 512
+ssd = 23786.234375
+phase = "c1-tuple"
+
+[c1-tuple."flowers::rgb"]
+steps = 1500
+tier = "full"
+mode = "rgb"
+sha256 = "c577a2f5f95efe74596fa9fed840190434616065175749377c7e4aa183d00a17"
+coverage = 0.07057772483621202
+fixture = "flowers"
+pins = 240
+alloc_bytes_100steps = 33601232
+wall_clock_s = 12.944121819
+size = 512
+ssd = 43022.88671875
+phase = "c1-tuple"
+
+[t2-cleanup."marcus-aurelius::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "42e6cbfa071e7ba7f2765b86adec43c8ddc9d58a194ab8b6c4f4428eddf8a9e8"
+coverage = 0.14673635517106726
+fixture = "marcus-aurelius"
+pins = 180
+alloc_bytes_100steps = 3215256
+wall_clock_s = 3.586099201
+size = 256
+ssd = 24798.9921875
+phase = "t2-cleanup"
+
+[t2-cleanup."moon::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "a0c1827d11fb4b3caea7cc35c9648628ad93b0dde794600d9bb8f1be7aadc146"
+coverage = 0.04282616552222624
+fixture = "moon"
+pins = 180
+alloc_bytes_100steps = 3215720
+wall_clock_s = 0.211267384
+size = 256
+ssd = 25563.697265625
+phase = "t2-cleanup"
+
+[t2-cleanup."great-wave::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "f5438adf6b2b6b157a9a7f44c57bd6524f392f79673116f78dbafad07535b623"
+coverage = 0.2845394736842105
+fixture = "great-wave"
+pins = 180
+alloc_bytes_100steps = 3215656
+wall_clock_s = 0.232154827
+size = 256
+ssd = 9447.90625
+phase = "t2-cleanup"
+
+[p1-sparse."marcus-aurelius::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "efb18921df471cc48b9cc1594eb496c0744329dd2246a454bd1b3187bdf9c968"
+coverage = 0.1602835601213541
+fixture = "marcus-aurelius"
+pins = 180
+alloc_bytes_100steps = 3214344
+wall_clock_s = 6.107895528
+size = 256
+ssd = 21837.0234375
+phase = "p1-sparse"
+
+[p1-sparse."moon::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "7239851f33dfa8b433c5698ef459dda0a0d9654a75081dfc3ac482e8c54a3574"
+coverage = 0.008854354897000361
+fixture = "moon"
+pins = 180
+alloc_bytes_100steps = 3214792
+wall_clock_s = 2.032282511
+size = 256
+ssd = 22331.15234375
+phase = "p1-sparse"
+
+[p1-sparse."great-wave::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "5efab3c62135f73b08c39e44e3056168bd1783e1ab55ac148fe8da09c5641c25"
+coverage = 0.43720095693779903
+fixture = "great-wave"
+pins = 180
+alloc_bytes_100steps = 3214792
+wall_clock_s = 1.557411958
+size = 256
+ssd = 8108.75
+phase = "p1-sparse"
+
+[t2-sparse-compositor."marcus-aurelius::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "42e6cbfa071e7ba7f2765b86adec43c8ddc9d58a194ab8b6c4f4428eddf8a9e8"
+coverage = 0.14673635517106726
+fixture = "marcus-aurelius"
+pins = 180
+alloc_bytes_100steps = 3215256
+wall_clock_s = 3.489323341
+size = 256
+ssd = 24798.9921875
+phase = "t2-sparse-compositor"
+
+[t2-sparse-compositor."moon::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "a0c1827d11fb4b3caea7cc35c9648628ad93b0dde794600d9bb8f1be7aadc146"
+coverage = 0.04282616552222624
+fixture = "moon"
+pins = 180
+alloc_bytes_100steps = 3215656
+wall_clock_s = 0.245128282
+size = 256
+ssd = 25563.697265625
+phase = "t2-sparse-compositor"
+
+[t2-sparse-compositor."great-wave::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "f5438adf6b2b6b157a9a7f44c57bd6524f392f79673116f78dbafad07535b623"
+coverage = 0.2845394736842105
+fixture = "great-wave"
+pins = 180
+alloc_bytes_100steps = 3215656
+wall_clock_s = 0.194101555
+size = 256
+ssd = 9447.90625
+phase = "t2-sparse-compositor"
+
+[t2-gifcleanup."marcus-aurelius::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "42e6cbfa071e7ba7f2765b86adec43c8ddc9d58a194ab8b6c4f4428eddf8a9e8"
+coverage = 0.14673635517106726
+fixture = "marcus-aurelius"
+pins = 180
+alloc_bytes_100steps = 3018336
+wall_clock_s = 3.916887561
+size = 256
+ssd = 24798.9921875
+phase = "t2-gifcleanup"
+
+[t2-gifcleanup."moon::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "a0c1827d11fb4b3caea7cc35c9648628ad93b0dde794600d9bb8f1be7aadc146"
+coverage = 0.04282616552222624
+fixture = "moon"
+pins = 180
+alloc_bytes_100steps = 3018544
+wall_clock_s = 0.349654054
+size = 256
+ssd = 25563.697265625
+phase = "t2-gifcleanup"
+
+[t2-gifcleanup."great-wave::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "f5438adf6b2b6b157a9a7f44c57bd6524f392f79673116f78dbafad07535b623"
+coverage = 0.2845394736842105
+fixture = "great-wave"
+pins = 180
+alloc_bytes_100steps = 3018736
+wall_clock_s = 0.335301348
+size = 256
+ssd = 9447.90625
+phase = "t2-gifcleanup"
