@@ -11,8 +11,14 @@ using Random
 using Statistics
 
 const Point = ComplexF64
-const Chord = Pair{Point,Point}
+const Chord = Tuple{Int,Int}
 const GrayImage = Matrix{N0f8}
+const SparseChord = @NamedTuple{idx::Vector{Int32}, w::Vector{Float32}}
+
+struct PinSet
+    pts::Vector{Point}
+    nbrs::Vector{Vector{Int}}
+end
 const RGBColor = RGB{N0f8}
 const RGBImage = Matrix{RGBColor}
 const Colors = Vector{RGBColor}
@@ -38,6 +44,7 @@ end
 
 # cache needed to store generated chords (very expensive to compute)
 const lru = SafeLRU{Chord, GrayImage}(maxsize=180 * 180)
+const sparse_lru = SafeLRU{Chord, SparseChord}(maxsize=180 * 180)
 
 @enum StringArtMode GrayscaleMode RgbMode PaletteMode
 
@@ -117,11 +124,13 @@ end
 
 """ Main function to generate string art image. Returns final image in png, svg and gif formats. """
 function run(input::Vector{GrayImage}, args::DefaultArgs)::Tuple{RGBImage,String,GifWrapper}
+    pinset = build_pinset(args["pins"], args["size"])
+
     # generate all chords to be draw in the canvas
     chords = Tuple[]
     for (color, img) in zip(args["colors"], input)
         @info loghelper(args) * "Iterating image with color: #$(hex(color))"
-        for chord in run_algorithm(img, args)
+        for chord in run_algorithm_fast(img, pinset, args)
             push!(chords, (chord, color))
         end
     end
@@ -139,12 +148,12 @@ function run(input::Vector{GrayImage}, args::DefaultArgs)::Tuple{RGBImage,String
     @info loghelper(args) * "Rendering Chords"
     for (n, (chord, color)) in enumerate(chords)
         # add chord to png image
-        img = gen_img(chord, args)
+        img = gen_img(chord, pinset, args)
         add_imgs!(images[color], img)
 
         # draw svg shape
         if args["svg"]
-            push!(svg, draw_line(chord, color, args))
+            push!(svg, draw_line(chord, pinset, color, args))
         end
         # save gif frame
         if args["gif"] && n % GIF_INTERVAL == 0
@@ -203,48 +212,122 @@ function join_channels(images::Dict{RGBColor,GrayImage}, mode::Val{PaletteMode})
     return complement.(RGB.(clamp01nan.(r), clamp01nan.(g), clamp01nan.(b)))
 end
 
-""" Core string art generation loop. Produces ordered chords for image approximation. """
-function run_algorithm(input::GrayImage, args::DefaultArgs)::Vector{Chord}
+""" Fast sparse-residual variant of run_algorithm (P1). """
+function run_algorithm_fast(input::GrayImage, pinset::PinSet, args::DefaultArgs)::Vector{Chord}
     steps = div(args["steps"], length(args["colors"]))
     exclude_repeated = get(args, "exclude-repeated-pins", false)
+    npins = length(pinset.pts)
 
-    @debug "Generating chords and pins positions"
+    # persistent residual: complement(input) as flat Float32
+    residual = vec(Float32.(complement.(input)))
     output = Vector{Chord}()
+    pin2chords = [Chord[chord_key(i, j) for j in pinset.nbrs[i]] for i in 1:npins]
 
-    pins = gen_pins(args["pins"], args["size"])
-    pin2chords = Dict(p => gen_chords(p, pins, args["size"]) for p in pins)
-
-    @debug "Starting algorithm..."
-    pin = rand(pins)
+    pin = rand(1:npins)
+    scores = Float32[]
     for step = 1:steps
-        @debug "Step: $step"
         if step % RANDOMIZED_PIN_INTERVAL == 0
-            pin = rand(pins)
+            pin = rand(1:npins)
         end
-
-        @debug "Generating chord images..."
         chords = pin2chords[pin]
+        (exclude_repeated && isempty(chords)) && break
 
-        if exclude_repeated && length(chords) == 0
-            @debug "No chords left, breaking..."
-            break
+        resize!(scores, length(chords))
+        fill!(scores, Inf32)
+        @threads for i in eachindex(chords)
+            @inbounds scores[i] = score(sparse_chord(chords[i], pinset, args), residual)
         end
+        _, idx = findmin(scores)
+        chord = chords[idx]
 
-        @debug "Calculating error in chords..."
-        error, idx = select_best_chord(input, chords, args)
-        chord, img = chords[idx], gen_img(chords[idx], args)
-        @debug "Error calculated" idx, error
-
-        @debug "Updating images and position..."
-        add_imgs!(input, img)
+        apply!(sparse_chord(chord, pinset, args), residual)
         push!(output, chord)
 
-        # don't draw the same chord again
         exclude_repeated && filter!(c -> c != chord, pin2chords[pin])
-        # use the second point of the chord as the next pin
-        pin = (chord.first == pin) ? chord.second : chord.first
+        pin = chord[1] == pin ? chord[2] : chord[1]
     end
     return output
+end
+
+""" Sparse chord score against residual. Lower (more negative) = better. """
+@inline function score(c::SparseChord, residual::Vector{Float32})::Float32
+    s = 0.0f0
+    @inbounds @simd for k in eachindex(c.idx)
+        s -= c.w[k] * residual[c.idx[k]]
+    end
+    return s
+end
+
+""" Subtract chord weights from residual at chord pixel indices. Clamped at 0 (D3 removes clamp). """
+function apply!(c::SparseChord, residual::Vector{Float32})
+    @inbounds for k in eachindex(c.idx)
+        i = c.idx[k]
+        v = residual[i] - c.w[k]
+        residual[i] = v < 0f0 ? 0f0 : v
+    end
+end
+
+""" Build or fetch sparse Bresenham chord (indices + constant weights). """
+function sparse_chord(chord::Chord, pinset::PinSet, args::DefaultArgs)::SparseChord
+    get!(sparse_lru, chord) do
+        sz = args["size"]
+        strength = Float32(args["line-strength"] / 100)
+        p, q = pinset.pts[chord[1]], pinset.pts[chord[2]]
+        idx = Int32[]
+        w = Float32[]
+        bresenham_sparse!(idx, w, sz,
+                          round(Int, real(p)), round(Int, imag(p)),
+                          round(Int, real(q)), round(Int, imag(q)),
+                          strength)
+        (idx=idx, w=w)
+    end
+end
+
+""" Bresenham that pushes column-major linear indices instead of writing to an image. """
+function bresenham_sparse!(idx::Vector{Int32}, w::Vector{Float32}, sz::Int,
+                            x0::Int, y0::Int, x1::Int, y1::Int, strength::Float32)
+    x0 = clamp(x0, 1, sz); y0 = clamp(y0, 1, sz)
+    x1 = clamp(x1, 1, sz); y1 = clamp(y1, 1, sz)
+    steep = abs(y1 - y0) > abs(x1 - x0)
+    if steep
+        x0, y0 = y0, x0
+        x1, y1 = y1, x1
+    end
+    if x0 > x1
+        x0, x1 = x1, x0
+        y0, y1 = y1, y0
+    end
+    dx = x1 - x0
+    dy = abs(y1 - y0)
+    err = div(dx, 2)
+    y_step = y0 < y1 ? 1 : -1
+    y = y0
+    for x in x0:x1
+        # column-major: linear index for M[row, col] is (col-1)*nrows + row
+        if steep
+            push!(idx, Int32((y - 1) * sz + x))  # M[x, y]
+        else
+            push!(idx, Int32((x - 1) * sz + y))  # M[y, x]
+        end
+        push!(w, strength)
+        err -= dy
+        if err < 0
+            y += y_step
+            err += dx
+        end
+    end
+end
+
+""" Sorted index pair identifying a chord regardless of endpoint order. """
+@inline chord_key(i::Int, j::Int)::Chord = i < j ? (i, j) : (j, i)
+
+""" Build PinSet: positions + per-pin neighbor index lists (distance-filtered). """
+function build_pinset(n_pins::Int, canvas::Int)::PinSet
+    pts = gen_pins(n_pins, canvas)
+    threshold = canvas * SMALL_CHORD_CUTOFF
+    nbrs = [Int[j for j in 1:n_pins if j != i && abs(pts[i] - pts[j]) > threshold]
+            for i in 1:n_pins]
+    return PinSet(pts, nbrs)
 end
 
 """ Generate `n` evenly spaced points around a circle on a square canvas. """
@@ -257,43 +340,16 @@ function gen_pins(pins::Int, size::Int)::Vector{Point}
     return round.(coords .+ center)
 end
 
-""" Generate valid chords from a given point `p` to other canvas points. """
-function gen_chords(p::Point, points::Vector{Point}, size::Int)::Vector{Chord}
-    # exclude small chords
-    threshold = size * SMALL_CHORD_CUTOFF
-    # line connecting a point to all other neighbors / canvas pins
-    return [to_chord(p, q) for q in points if abs(p - q) > threshold]
-end
-
-""" Create an ordered chord (pair of points). """
-function to_chord(p::Point, q::Point)::Chord
-    # pair should be ordered so it can be searched
-    p, q = sort([p, q], by=x -> (real(x), imag(x)))
-    return Pair(p, q)
-end
-
-""" Find best chord that minimizes difference to target image. """
-function select_best_chord(img::GrayImage, chords::Vector{Chord}, args::DefaultArgs)::Tuple{Float64,Int}
-    cimg = complement.(img)
-    errors = fill(Inf32, length(chords))
-
-    # @threads handles scheduling; avoids div-by-zero when nchords < nthreads()
-    @threads for i in eachindex(chords)
-        chord_img = gen_img(chords[i], args)
-        @inbounds errors[i] = @fastmath Images.ssd(cimg, chord_img)
-    end
-    return findmin(errors)
-end
-
-""" Generate grayscale image representing a line between two points. """
-function gen_img(chord::Chord, args::DefaultArgs)::GrayImage
+""" Generate grayscale image representing a line between two pins. """
+function gen_img(chord::Chord, pinset::PinSet, args::DefaultArgs)::GrayImage
     get!(lru, chord) do
         # extract parameters from cli args
         size, blur = args["size"], args["blur"]
         strength = convert(N0f8, args["line-strength"] / 100)
 
-        # get endpoints
-        p, q = chord
+        # resolve pin indices to points
+        p = pinset.pts[chord[1]]
+        q = pinset.pts[chord[2]]
 
         # create an empty image with pre-allocated zeros
         m = zeros(Gray{N0f8}, size, size)
@@ -408,9 +464,10 @@ function svg_header(args::DefaultArgs)::String
 end
 
 """ Draw a line in SVG format. """
-function draw_line(chord::Chord, color::RGBColor, args::DefaultArgs)::String
-    x1, y1 = real(chord.first), imag(chord.first)
-    x2, y2 = real(chord.second), imag(chord.second)
+function draw_line(chord::Chord, pinset::PinSet, color::RGBColor, args::DefaultArgs)::String
+    p, q = pinset.pts[chord[1]], pinset.pts[chord[2]]
+    x1, y1 = real(p), imag(p)
+    x2, y2 = real(q), imag(q)
     width = @sprintf("%.2f", args["line-strength"] / 100)
     return """<line x1="$x1" x2="$x2" y1="$y1" y2="$y2" stroke="#$(hex(color))" stroke-width="$width" filter="url(#blur)"/>"""
 end
@@ -446,12 +503,11 @@ end
 """ Visual debug: draw all chords from the first pin. """
 function plot_chords(input::GrayImage, args::DefaultArgs)::GrayImage
     @debug "Generating chords"
-    pins = gen_pins(args["pins"], args["size"])
-    chords = gen_chords(pins[1], pins, args["size"])
+    pinset = build_pinset(args["pins"], args["size"])
 
     @debug "Plotting chords"
-    for chord in chords
-        add_imgs!(input, gen_img(chord, args))
+    for j in pinset.nbrs[1]
+        add_imgs!(input, gen_img(chord_key(1, j), pinset, args))
     end
 
     @debug "Done"
