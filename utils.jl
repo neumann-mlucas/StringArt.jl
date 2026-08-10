@@ -1,121 +1,93 @@
 module StringArtUtils
 
-include("stringart.jl")
+include("src/StringArt.jl")
 
 using .StringArt
 
 using ArgParse
+using FileIO
 using Images
-using Logging
 using Random
 
-Random.seed!(42)
-
-const DefaultArgs = Dict{String,Any}((
-    "line-strength" => 25,
-    "pins" => 180,
-    "size" => 500,
-    "steps" => 1000,
-    "gif" => false,
-    "svg" => false,
-))
-
 function main()
+    Random.seed!(42)
     args = parse_cmd()
+    StringArt.setup_logging(args)
 
-    if args["verbose"]
-        ENV["JULIA_DEBUG"] = Main
-    end
+    outputs = StringArt.resolve_output(args["output"])
+    length(outputs) == 1 || error("utils.jl expects a single output path")
+    out_path, _ = outputs[1]
 
-    args = merge(DefaultArgs, args)
-    input, output = args["input"], args["output"]
-
-    colors = parse_colors(args["colors"])
     fn_name = args["function"]
-
+    input = args["input"]
     @info "Loading input image: '$input'"
 
     if fn_name == "plot_color"
-        args["colors"] = colors
-        inp = StringArt.load_image(input, args["size"], colors, StringArt.RgbMode)
+        colors = StringArt.parse_hex_colors(args["colors"])
+        cfg = StringArt.Config(
+            size = args["size"],
+            pins = args["pins"],
+            line_strength = args["line-strength"],
+            mode = StringArt.RgbMode,
+            colors = colors,
+        )
+        inp = StringArt.load_image(input, cfg.size, colors, StringArt.RgbMode)
         @info "Running $fn_name..."
-        out = StringArt.plot_color(inp, args)
-    elseif fn_name == "plot_pins"
-        args["colors"] = [RGB{N0f8}(0,0,0)]
-        inp = StringArt.load_image(input, args["size"], args["colors"], StringArt.GrayscaleMode)[1]
+        out = StringArt.plot_color(inp, cfg)
+    elseif fn_name in ("plot_pins", "plot_chords")
+        black = [RGB{N0f8}(0, 0, 0)]
+        cfg = StringArt.Config(
+            size = args["size"],
+            pins = args["pins"],
+            line_strength = args["line-strength"],
+            mode = StringArt.GrayscaleMode,
+            colors = black,
+        )
+        inp = StringArt.load_image(input, cfg.size, black, StringArt.GrayscaleMode)[1]
         @info "Running $fn_name..."
-        out = StringArt.plot_pins(inp, args)
-    elseif fn_name == "plot_chords"
-        args["colors"] = [RGB{N0f8}(0,0,0)]
-        inp = StringArt.load_image(input, args["size"], args["colors"], StringArt.GrayscaleMode)[1]
-        @info "Running $fn_name..."
-        out = StringArt.plot_chords(inp, args)
+        out =
+            fn_name == "plot_pins" ? StringArt.plot_pins(inp, cfg) :
+            StringArt.plot_chords(inp, cfg)
     else
-        error("Unknown --function '$fn_name' (expected: plot_pins, plot_chords, plot_color)")
+        error(
+            "Unknown --function '$fn_name' (expected: plot_pins, plot_chords, plot_color)",
+        )
     end
 
-    @info "Saving final output image to: '$output'"
-    save(output * ".png", Gray.(out))
-
+    @info "Saving final output image to: '$out_path'"
+    save(out_path, Gray.(out))
     @info "Done"
 end
 
 function parse_cmd()
     parser = ArgParseSettings(
-        description="StringArt Utilities - Debug and visualization tools",
-        epilog="Example: julia utils.jl -f plot_pins -i input.jpg -o debug"
+        description = "StringArt Utilities - Debug and visualization tools",
+        epilog = "Example: julia utils.jl -f plot_pins -i input.jpg -o debug.png",
     )
-    @add_arg_table parser begin
+    StringArt.add_common_args!(parser)
+    @add_arg_table! parser begin
+        "--size", "-s"
+        help = "output canvas size in pixels"
+        arg_type = Int
+        default = 512
         "--function", "-f"
         help = "util function to execute (plot_pins, plot_chords, plot_color)"
         arg_type = String
         required = true
-        "--input", "-i"
-        help = "input image path"
-        arg_type = String
-        required = true
-        "--output", "-o"
-        help = "output image path without extension"
-        arg_type = String
-        default = "output"
-        "--size", "-s"
-        help = "output image size in pixels"
-        arg_type = Int
-        default = 512
         "--pins", "-n"
         help = "number of pins to use in canvas"
         arg_type = Int
         default = 180
-        "--steps"
-        help = "number of algorithm iterations"
-        arg_type = Int
-        default = 1000
         "--line-strength"
         help = "line intensity ranging from 1-100"
         arg_type = Int
         default = 25
         "--colors"
         help = "HEX code of colors to use for plot_color (comma-separated)"
+        arg_type = String
         default = "#FF0000,#00FF00,#0000FF"
-        "--gif"
-        help = "Save output as a GIF"
-        action = :store_true
-        "--verbose"
-        help = "verbose mode"
-        action = :store_true
     end
     parse_args(parser)
-end
-
-function parse_colors(colors::String)::StringArt.Colors
-    to_color(c) = parse(RGB{N0f8}, c)
-    rgb_colors = [RGB{N0f8}(1,0,0), RGB{N0f8}(0,1,0), RGB{N0f8}(0,0,1)]
-    try
-        rgb_colors = map(to_color, split(colors, ","))
-    catch e
-        @error "Unable to parse '$colors' $e"
-    end
-    return rgb_colors
 end
 
 end

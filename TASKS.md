@@ -6,6 +6,14 @@ task order.
 
 Legend: **P** = performance, **D** = drawing, **C** = cleanup, **T** = test.
 
+> **Path note.** Code now lives under `src/StringArt.jl` with vendored
+> helpers in `src/common.jl`. CLI entry `main.jl` builds a `StringArt.Config`
+> and calls `StringArt.render` (was `.run`). Removed post-refactor:
+> `SafeLRU` (LRU is thread-safe already), `Val{Mode}` dispatch (replaced
+> with `if`/`elseif`), args-bag `Dict{String,Any}` (replaced with `Config`),
+> `--svg`/`--gif` CLI flags (format inferred from `-o` extension), the
+> `Colors` type alias (renamed `Palette` to unshadow the `Colors` module).
+
 ---
 
 ## Phase 1 — Foundations
@@ -28,7 +36,7 @@ Legend: **P** = performance, **D** = drawing, **C** = cleanup, **T** = test.
 - Depends on: none.
 
 ### C1. Port `Chord` to `Tuple{Int,Int}` key ✓ done
-- New `PinSet` struct in `stringart.jl` with `pts` and `nbrs` fields.
+- New `PinSet` struct in `src/StringArt.jl` with `pts` and `nbrs` fields.
 - `chord_key(i,j)` returns sorted `Tuple{Int,Int}`.
 - Deleted `to_chord`, `gen_chords`; `build_pinset` computes neighbor
   index lists once. Cache key type `Pair{Point,Point}` → `Tuple{Int,Int}`.

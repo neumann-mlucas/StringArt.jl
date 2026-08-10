@@ -3,6 +3,14 @@
 Design notes for performance and drawing-quality upgrades. Each section states
 the problem, the change, the file/lines touched, and the expected impact.
 
+> **Path note.** All `stringart.jl:NNN` references below predate the
+> src-layout refactor. The module now lives at `src/StringArt.jl` and shares
+> vendored helpers with MonteCarloArt.jl via `src/common.jl`. Historical
+> constructs called out here — `SafeLRU`, `Val{Mode}` dispatch, args-bag
+> `Dict`, `run` (renamed to `render`), `select_best_chord`, `gen_img`,
+> `bresenham_line!`, `add_imgs!`, `GifWrapper`, `--blur` — are all removed.
+> Read numeric line refs as archaeological.
+
 ## Baseline
 
 - Greedy per-pin chord selection minimizing SSD vs residual target.
@@ -39,7 +47,7 @@ score = -Σ w[k] · residual[idx[k]]         # more negative = better
 `apply!` subtracts `w` from `residual` in place at those indices. LRU keys
 switch to `Tuple{Int,Int}` (pin index pair).
 
-**Files.** `stringart.jl` — new `SparseChord`, `score`, `apply!`, replace
+**Files.** `src/StringArt.jl` — new `SparseChord`, `score`, `apply!`, replace
 `gen_img` and `select_best_chord` internals. Cache type changes.
 
 **Impact.** Per-step scan: `O(n_pins · N)` instead of `O(n_pins · N²)`.
@@ -59,7 +67,7 @@ convolution over N×N.
 Antialiasing is native to the rasterization. Removes `imfilter` from the hot
 path. Weights fold directly into `SparseChord.w`.
 
-**Files.** `stringart.jl` — replace `bresenham_line!` with `wu_line!` writing
+**Files.** `src/StringArt.jl` — replace `bresenham_line!` with `wu_line!` writing
 into the sparse buffer. `--blur` CLI flag deprecated (warn if set,
 ignore value).
 
@@ -76,7 +84,7 @@ pin coordinates. Four floats per key; hashing and equality both float-based.
 **Change.** Store pins in a `PinSet{pts,nbrs}` struct indexed by pin id.
 Chord key = `(min(i,j), max(i,j))::Tuple{Int,Int}`.
 
-**Files.** `stringart.jl` — new `PinSet`, `build_pinset`, `chord_key`.
+**Files.** `src/StringArt.jl` — new `PinSet`, `build_pinset`, `chord_key`.
 Consumers of `Chord` (SVG writer, gif rendering) receive `(i,j)` and resolve
 to points via the pinset.
 
@@ -96,7 +104,7 @@ that only chord pixels change.
 `apply!` mutates only chord indices. Score reads only chord indices.
 Threaded findmin uses per-thread partial mins (no shared best-so-far race).
 
-**Files.** `stringart.jl` — new `run_algorithm_fast`. Old `run_algorithm`
+**Files.** `src/StringArt.jl` — new `run_algorithm_fast`. Old `run_algorithm`
 removed (or delegated).
 
 **Impact.** Zero per-step N² work outside the actual chord footprint.
@@ -112,12 +120,13 @@ scan already threaded, but on small pin counts inner parallelism is thin.
 **Change.** When `nthreads() ≥ 2·n_colors`, run color channels in parallel
 via `@threads`. Otherwise keep serial to avoid oversubscription.
 
-**Files.** `stringart.jl` — `run` outer loop.
+**Files.** `src/StringArt.jl` — `run` outer loop.
 
 **Impact.** ~2–3× speedup on RGB and palette modes when core count exceeds
 color count.
 
-**Risk.** Thread-safe cache (`SafeLRU`) already handled at `stringart.jl:27`.
+**Risk.** Cache is thread-safe (LRUCache.LRU internal SpinLock; the wrapper
+`SafeLRU` was removed post-refactor).
 
 ---
 
@@ -132,7 +141,7 @@ be re-selected from the other side. Silent correctness bug in
 candidates whose key is in the set. Removes both the bug and the O(n)
 `filter!`.
 
-**Files.** `stringart.jl` — `run_algorithm_fast` inner loop.
+**Files.** `src/StringArt.jl` — `run_algorithm_fast` inner loop.
 
 **Impact.** Correct exclusion behavior; O(1) dedup per candidate.
 
@@ -152,7 +161,7 @@ score -= w[k] · residual[idx[k]]^2
 
 Dark pixels (where residual is large) dominate the ranking.
 
-**Files.** `stringart.jl` — `score`.
+**Files.** `src/StringArt.jl` — `score`.
 
 **Impact.** Sharper subject reproduction, especially on portraits. One
 extra multiply per pixel — negligible.
@@ -167,7 +176,7 @@ extra multiply per pixel — negligible.
 step, take top-K by first-step score, simulate `apply!`, score best
 next-step, `undo!`. Pick the K with best `(s1 + s2)`.
 
-**Files.** `stringart.jl` — `beam_pick`, `undo!`. CLI in `main.jl`.
+**Files.** `src/StringArt.jl` — `beam_pick`, `undo!`. CLI in `main.jl`.
 
 **Impact.** ~2× slower per step at K=4. Empirically ~10–15% error
 reduction on portraits. Off by default.
@@ -183,7 +192,7 @@ chord across an already-dark region. Result: blob-like buildup.
 negative. Score naturally penalizes drawing again over that region
 (negative residual → positive score contribution).
 
-**Files.** `stringart.jl` — `apply!`.
+**Files.** `src/StringArt.jl` — `apply!`.
 
 **Impact.** Reduced clumping in dense areas. One-line change.
 
@@ -191,9 +200,9 @@ negative. Score naturally penalizes drawing again over that region
 
 ## D4. Per-channel palette normalization
 
-**Problem.** `join_channels(::Val{PaletteMode})` at `stringart.jl:199`
-normalizes R, G, B by a single `max(quantile(...))` divisor. Dominant
-channel dims the others.
+**Problem.** `_join_palette` in `src/StringArt.jl` (former
+`join_channels(::Val{PaletteMode})`) normalizes R, G, B by a single
+`max(quantile(...))` divisor. Dominant channel dims the others.
 
 **Change.** Normalize each channel by its own max:
 
@@ -203,7 +212,7 @@ g ./= max(maximum(g), 1f0)
 b ./= max(maximum(b), 1f0)
 ```
 
-**Files.** `stringart.jl:199-202`.
+**Files.** `src/StringArt.jl` — `_join_palette`.
 
 **Impact.** Correct color balance in palette mode. Also faster (no
 quantiles). Behavior change — regenerate palette-mode examples.
@@ -219,7 +228,7 @@ steps regardless of whether the walk is stuck. Discards good greedy state.
 `apply!`). Restart from a random pin only when a moving-window mean gain
 drops below a threshold fraction of the initial gain.
 
-**Files.** `stringart.jl` — `run_algorithm_fast`.
+**Files.** `src/StringArt.jl` — `run_algorithm_fast`.
 
 **Impact.** Fewer wasted steps after restart. Modest quality gain.
 
@@ -237,7 +246,7 @@ drops below a threshold fraction of the initial gain.
 
 - Not changing SVG output format.
 - Not switching to CUDA/GPU (out of scope; separate spike).
-- Not tuning k-means palette extraction (`main.jl:126`).
+- Not tuning k-means palette extraction (`main.jl`, `get_palette`).
 - Not changing the GIF pipeline (only the rendered content changes).
 
 ## Merge order

@@ -60,66 +60,69 @@ The Libraries:
 
 ### Usage
 
+Output format is inferred from the `-o` file extension (`.png`, `.svg`, `.gif`). Comma-separate multiple paths to emit several formats in one run.
+
 ```bash
 # basic
-$ julia -O3 -t 8 main.jl -i [input image] -o [output image]
+$ julia -O3 -t 8 main.jl -i input.jpg -o output.png
 
 # suggested
-$ julia -O3 -t 8 main.jl -s 720 --steps 2000 -i [input image] -o [output image]
+$ julia -O3 -t 8 main.jl -s 720 --steps 2000 -i input.jpg -o output.png
 
 # alter the image resolution
-$ julia -O3 -t 8 main.jl -s 800 -i [input image] -o [output image]
+$ julia -O3 -t 8 main.jl -s 800 -i input.jpg -o output.png
 
 # RGB color mode
-$ julia -O3 -t 8 main.jl --rgb -i [input image] -o [output image]
+$ julia -O3 -t 8 main.jl --rgb -i input.jpg -o output.png
 
-#  RGB color mode with custom colors
-$ julia -O3 -t 8 main.jl --custom-colors "#FFFF33,#33FFFF" -i [input image] -o [output image]
+# RGB color mode with custom colors
+$ julia -O3 -t 8 main.jl --custom-colors "#FFFF33,#33FFFF" -i input.jpg -o output.png
 
-#  RGB color using color palette (n = 4) extracted from the input image
-$ julia -O3 -t 8 main.jl --palette 4 -i [input image] -o [output image]
+# RGB color using color palette (n = 4) extracted from the input image
+$ julia -O3 -t 8 main.jl --palette 4 -i input.jpg -o output.png
 
-# Saves GIF output
-$ julia -O3 -t 8 main.jl --gif -i [input image] -o [output image]
+# GIF output (extension picks the format)
+$ julia -O3 -t 8 main.jl -i input.jpg -o output.gif
 
-# Saves as SVG
-$ julia -O3 -t 8 main.jl --svg -i [input image] -o [output image]
+# SVG output
+$ julia -O3 -t 8 main.jl -i input.jpg -o output.svg
 
+# PNG + SVG + GIF in a single run
+$ julia -O3 -t 8 main.jl -i input.jpg -o output.png,output.svg,output.gif
 ```
 
 ### Debugging Utilities
 
 ```bash
 # plot pins used in the image
-$ julia utils.jl -f plot_pins -i [input image] -o [output image]
+$ julia utils.jl -f plot_pins -i input.jpg -o pins.png
 
 # plot color channel for a given color and input image
-$ julia utils.jl -f plot_color --colors "#FF0000" -i [input image] -o [output image]
+$ julia utils.jl -f plot_color --colors "#FF0000" -i input.jpg -o color.png
 ```
 
 ### Parameters
 
 ```bash
-usage: main.jl -i INPUT [-o OUTPUT] [--gif] [--svg] [-s SIZE]
-               [-n PINS] [--steps STEPS]
-               [--line-strength LINE-STRENGTH] [--rgb]
+usage: main.jl -i INPUT [-o OUTPUT] [-s SIZE] [--steps STEPS] [-v]
+               [-n PINS] [--line-strength LINE-STRENGTH] [--rgb]
                [--custom-colors CUSTOM-COLORS] [--palette PALETTE]
-               [--exclude-repeated-pins] [--verbose] [-h]
+               [--exclude-repeated-pins] [-h]
 
 StringArt - Convert images to string art
 
 optional arguments:
   -i, --input INPUT     input image path
-  -o, --output OUTPUT   output image path without extension (default:
-                        "output")
-  --gif                 Save output as a GIF
-  --svg                 Save output as a SVG
-  -s, --size SIZE       output image size in pixels (type: Int64,
+  -o, --output OUTPUT   output path with extension (.png/.svg/.gif);
+                        comma-separate for multiple (default:
+                        "output.png")
+  -s, --size SIZE       output canvas size in pixels (type: Int64,
                         default: 512)
+  --steps STEPS         algorithm iteration count (type: Int64,
+                        default: 1000)
+  -v, --verbose         verbose (debug) logging
   -n, --pins PINS       number of pins to use in canvas (type: Int64,
                         default: 180)
-  --steps STEPS         number of algorithm iterations (type: Int64,
-                        default: 1000)
   --line-strength LINE-STRENGTH
                         line intensity ranging from 1-100 (type:
                         Int64, default: 25)
@@ -134,10 +137,9 @@ optional arguments:
   --exclude-repeated-pins
                         skip chords already drawn (yields noisier /
                         more diffuse output)
-  --verbose             verbose mode
   -h, --help            show this help message and exit
 
-Example: julia main.jl -i input.jpg -o output --svg
+Example: julia main.jl -i input.jpg -o output.png
 ```
 
 > keep the number of pins below 250 and the image size below 1000.
