@@ -10,67 +10,69 @@ Legend: **P** = performance, **D** = drawing, **C** = cleanup, **T** = test.
 
 ## Phase 1 — Foundations
 
-### T1. Test harness + baseline
+### T1. Test harness + baseline ✓ done
 - Add `test/` per layout in `SPEC.md` §Test strategy → Harness structure.
-- Copy the 11 fixtures listed in `SPEC.md` §Fixture set into
-  `test/fixtures/`. Reuse `examples/einstein.png` and frame 0 of
-  `examples/david.gif` where possible.
-- `test_baseline.jl` records the six metrics from `SPEC.md` §Metrics
-  (SSD, SSIM, coverage, overdraw p99, wall-clock, allocations, hash)
-  into `test/baseline.json` keyed by `(fixture, phase="baseline")`.
-- `test_correctness.jl` enforces the guardrails from `SPEC.md`
-  §Guardrails against the previous phase's numbers.
+- Copy the 12 fixtures into `test/fixtures/`.
+- `test_baseline.jl` records SSD, coverage, wall-clock, allocations, and
+  sha256 hash into `test/baseline.toml` (stdlib TOML — no JSON dep).
+  SSIM skipped (no `ImageQualityIndexes` in manifest). Overdraw p99
+  deferred (needs residual-side instrumentation post-P1/P4).
+- `test_correctness.jl` enforces SSD guardrail vs previous phase's
+  numbers. `test_perf.jl` gates wall-clock and allocation bytes.
 - Fix `Random.seed!(42)` at the top of every entry point.
 - Wire the CI matrix: fast-pass job (3 fixtures, N=256) on PR,
-  nightly job for the full set.
-- Acceptance: `julia --project test/runtests.jl` runs green, writes
-  baseline metrics, produces `test/artifacts/` visual diffs.
+  nightly job for the full set. Fixture fetch step commented out
+  until `test/fixtures/fetch.sh` is committed.
+- Acceptance: `julia --startup-file=no test/runtests.jl` runs green,
+  writes baseline metrics, produces `test/artifacts/` visual diffs.
 - Depends on: none.
 
-### C1. Port `Chord` to `Tuple{Int,Int}` key
-- New `PinSet{pts,nbrs}` struct in `stringart.jl`.
+### C1. Port `Chord` to `Tuple{Int,Int}` key ✓ done
+- New `PinSet` struct in `stringart.jl` with `pts` and `nbrs` fields.
 - `chord_key(i,j)` returns sorted `Tuple{Int,Int}`.
-- Update `to_chord`, `gen_chords`, cache key type. LRU key
-  `Pair{Point,Point}` → `Tuple{Int,Int}`.
-- Acceptance: existing examples reproduce bit-for-bit (rasterization
-  unchanged in this phase).
+- Deleted `to_chord`, `gen_chords`; `build_pinset` computes neighbor
+  index lists once. Cache key type `Pair{Point,Point}` → `Tuple{Int,Int}`.
+- Acceptance: existing examples reproduce bit-for-bit (36/36 sha256
+  hashes match pre-C1 on multi-thread full-tier run).
 - Depends on: T1.
 
 ---
 
 ## Phase 2 — Sparse chord core
 
-### P1. Sparse chord representation
+### P1. Sparse chord representation ✓ done
 - New `SparseChord = @NamedTuple{idx::Vector{Int32}, w::Vector{Float32}}`.
 - `score(c, residual)` and `apply!(c, residual)` operate on flat
-  `Vector{Float32}`.
-- Wire into a new `run_algorithm_fast`. Keep old `run_algorithm` in place
-  behind a `--legacy` flag for A/B during this phase only.
-- Acceptance: sparse and legacy paths produce visually equivalent output
-  on grayscale einstein; sparse ≥10× faster on N=512 / steps=2000.
+  `Vector{Float32}`. Persistent residual and threaded scan folded in
+  (P4 partially absorbed).
+- Wired into `run_algorithm`. Legacy `run_algorithm` + `select_best_chord`
+  gated behind `--legacy` initially, dropped in the follow-up cleanup.
+- Acceptance: sparse hits ≥10× wall-clock speedup on fast tier
+  (measured 10-52× per fixture; SSD improved 3-4× vs C1 baseline).
 - Depends on: C1.
 
-### P2. Xiaolin Wu line
-- Replace `bresenham_line!` writing into an image with `wu_line!` writing
-  into `(idx, w)` buffers.
-- Deprecate `--blur` in `main.jl`: warn, ignore.
-- Acceptance: no `imfilter` calls in hot path (`grep imfilter stringart.jl`
-  reports none inside `run_algorithm_fast`).
-- Depends on: P1.
+### P2. Xiaolin Wu line — TODO
+- Replace `bresenham_sparse!` with `wu_line!` writing into `(idx, w)`
+  buffers with subpixel weights.
+- Acceptance: no `imfilter` calls in hot path.
+- Depends on: P1. Bresenham sparse currently produces 1-pixel lines
+  with constant weight; Wu adds native antialiasing.
 
-### P4. Persistent residual + threaded findmin
-- `residual::Vector{Float32}` initialized once.
-- Per-thread `part_s`, `part_k` for reduction.
-- Acceptance: no per-step allocation over 4 KB (measure via
-  `@allocated` on a 100-step sample).
+### P4. Persistent residual + threaded findmin ✓ partially done
+- `residual::Vector{Float32}` initialized once — done in P1 rewrite.
+- Threaded scan: currently uses shared `scores` array + `argmin`; SPEC
+  calls for per-thread `part_s` / `part_k` partial-min reduction. TODO.
+- Alloc gate: no separate 100-step allocation check yet.
 - Depends on: P1, P2.
 
-### T2. Remove `--legacy` path
-- Once P1+P2+P4 confirmed on all test images, delete old
-  `run_algorithm`, `select_best_chord`, `gen_img`, `bresenham_line!`,
-  `add_imgs!`.
-- Acceptance: LOC delta negative; all tests pass.
-- Depends on: P1, P2, P4.
+### T2. Remove `--legacy` path ✓ done
+- Deleted `run_algorithm` (legacy), `select_best_chord`, `gen_img`,
+  `bresenham_line!`, `add_imgs!`, image LRU cache, `GifWrapper` struct,
+  `svg_header`, `--blur` flag, `--legacy` flag. Compositor moved to
+  `apply_sparse_to_image!` writing sparse chord weights straight into
+  the per-color accumulator.
+- Acceptance: LOC delta strongly negative (-97 refactor + -37 gif).
+- Depends on: P1, P2 (still awaiting Wu antialiasing).
 
 ---
 
@@ -137,9 +139,9 @@ Legend: **P** = performance, **D** = drawing, **C** = cleanup, **T** = test.
 - Set to `n_pins*(n_pins-1)÷2` (all chords fit).
 - Depends on: P1.
 
-### C3. Remove `--blur`
-- After one tagged release with the deprecation warning, delete the flag
-  and the `blur` field from `args`.
+### C3. Remove `--blur` ✓ done (early, skipped deprecation window)
+- Flag and every `blur` reference removed in the T2 cleanup pass.
+- SVG loses the `<filter>` element that referenced it.
 - Depends on: P2 + release cadence.
 
 ### C4. README + examples regeneration

@@ -31,7 +31,7 @@ Additionally, the script features a command-line interface (CLI) with various tw
 - Set the pin to be opposite point in the line L.
 
 **Line Generating Function:**
-One-pixel-width lines (or any square/stair-like lines) do not yield good results. Experimentation with different line functions is essential here. I ended up choosing to apply the Gaussian Blur Kernel to the line. It's simple, and it works (also, it eliminates the need to fine-tune other parameters).
+Each chord is rasterized once (Bresenham) into a sparse `(idx, w)` pair — column-major pixel indices and per-pixel weights — cached by chord key. Antialiased Xiaolin Wu rasterization is planned; for now lines are 1-pixel-thick with constant weight.
 
 **Line Pixel Strength:**
 Opt for low line pixel values to create nuanced shades of gray in the output image.
@@ -40,19 +40,23 @@ Opt for low line pixel values to create nuanced shades of gray in the output ima
 Randomizing the pin position periodically (every N steps) tends to give better results.
 
 **Error Function:**
-Arguably the most critical part of the algorithm. You should minimize the error here and not any other metric (I lost a lot of time doing that...). The best function that I found was the squared difference between the source image and the line (but the performance takes a considerable hit here).
+The greedy pick scores candidates against a persistent `residual::Vector{Float32}` (initial `complement(target)` flattened). Score is a sparse dot product `-Σ w[k] · residual[idx[k]]` over the ~N pixels the chord touches — no full N² pass per candidate. `apply!` subtracts the weights from the residual in place.
 
 **Excluding Already Visited Lines:**
-While excluding used lines each iteration improves performance, it results in a more diffuse and noisy image. In this implementation, visited lines are retained. If you prefer the noisy style, just change the variable `EXCLUDE_REPEATED_PINS` to true.
+While excluding used lines each iteration improves performance, it results in a more diffuse and noisy image. Off by default. Pass `--exclude-repeated-pins` to enable.
 
 ### Requirements
 
 The Libraries:
 
 - ArgParse
+- Clustering
+- FileIO
 - **Images**
 - Logging
 - **LRUCache**
+- Random (stdlib)
+- Statistics (stdlib)
 
 ### Usage
 
@@ -90,7 +94,7 @@ $ julia -O3 -t 8 main.jl --svg -i [input image] -o [output image]
 $ julia utils.jl -f plot_pins -i [input image] -o [output image]
 
 # plot color channel for a given color and input image
-$ julia utils.jl -f plot_colors --colors "#FF0000" -i [input image] -o [output image]
+$ julia utils.jl -f plot_color --colors "#FF0000" -i [input image] -o [output image]
 ```
 
 ### Parameters
@@ -98,9 +102,9 @@ $ julia utils.jl -f plot_colors --colors "#FF0000" -i [input image] -o [output i
 ```bash
 usage: main.jl -i INPUT [-o OUTPUT] [--gif] [--svg] [-s SIZE]
                [-n PINS] [--steps STEPS]
-               [--line-strength LINE-STRENGTH] [--blur BLUR] [--rgb]
+               [--line-strength LINE-STRENGTH] [--rgb]
                [--custom-colors CUSTOM-COLORS] [--palette PALETTE]
-               [--verbose] [-h]
+               [--exclude-repeated-pins] [--verbose] [-h]
 
 StringArt - Convert images to string art
 
@@ -119,8 +123,6 @@ optional arguments:
   --line-strength LINE-STRENGTH
                         line intensity ranging from 1-100 (type:
                         Int64, default: 25)
-  --blur BLUR           gaussian blur kernel size (type: Int64,
-                        default: 1)
   --rgb                 use basic RGB color mode (default: red, green,
                         blue)
   --custom-colors CUSTOM-COLORS
@@ -129,6 +131,9 @@ optional arguments:
   --palette PALETTE     number of colors to extract as a palette from
                         the input image (k-means clustering) (type:
                         Int64)
+  --exclude-repeated-pins
+                        skip chords already drawn (yields noisier /
+                        more diffuse output)
   --verbose             verbose mode
   -h, --help            show this help message and exit
 
