@@ -9,6 +9,9 @@ using Clustering
 using FileIO
 using Images
 using Logging
+using Random
+
+Random.seed!(42)
 
 function main()
     # parse command line arguments

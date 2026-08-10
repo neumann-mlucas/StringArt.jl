@@ -7,6 +7,9 @@ using .StringArt
 using ArgParse
 using Images
 using Logging
+using Random
+
+Random.seed!(42)
 
 const DefaultArgs = Dict{String,Any}((
     "blur" => 1,
