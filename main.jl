@@ -90,10 +90,6 @@ function parse_cmd()
         help = "line intensity ranging from 1-100"
         arg_type = Int
         default = 25
-        "--blur"
-        help = "gaussian blur kernel size"
-        arg_type = Int
-        default = 1
         "--rgb"
         help = "use basic RGB color mode (default: red, green, blue)"
         action = :store_true

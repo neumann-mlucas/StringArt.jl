@@ -12,7 +12,6 @@ using Random
 Random.seed!(42)
 
 const DefaultArgs = Dict{String,Any}((
-    "blur" => 1,
     "line-strength" => 25,
     "pins" => 180,
     "size" => 500,
@@ -95,10 +94,6 @@ function parse_cmd()
         help = "line intensity ranging from 1-100"
         arg_type = Int
         default = 25
-        "--blur"
-        help = "gaussian blur kernel size"
-        arg_type = Int
-        default = 1
         "--colors"
         help = "HEX code of colors to use for plot_color (comma-separated)"
         default = "#FF0000,#00FF00,#0000FF"

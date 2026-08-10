@@ -1,6 +1,6 @@
 module StringArt
 
-using Base.Threads: @threads, nthreads
+using Base.Threads: @threads
 using Dates
 using FileIO
 using Images
@@ -28,7 +28,7 @@ const GIF_INTERVAL = 50
 const RANDOMIZED_PIN_INTERVAL = 100
 const SMALL_CHORD_CUTOFF = 0.10
 
-# Thread-safe LRU wrapper: gen_img is called from @threads and LRUCache.LRU
+# Thread-safe LRU wrapper: sparse_chord is called from @threads and LRUCache.LRU
 # is not guaranteed thread-safe across all published versions.
 struct SafeLRU{K,V}
     lru::LRU{K,V}
@@ -43,7 +43,6 @@ function Base.get!(f::Function, s::SafeLRU{K,V}, key::K) where {K,V}
 end
 
 # cache needed to store generated chords (very expensive to compute)
-const lru = SafeLRU{Chord, GrayImage}(maxsize=180 * 180)
 const sparse_lru = SafeLRU{Chord, SparseChord}(maxsize=180 * 180)
 
 @enum StringArtMode GrayscaleMode RgbMode PaletteMode
@@ -130,7 +129,7 @@ function run(input::Vector{GrayImage}, args::DefaultArgs)::Tuple{RGBImage,String
     chords = Tuple[]
     for (color, img) in zip(args["colors"], input)
         @info loghelper(args) * "Iterating image with color: #$(hex(color))"
-        for chord in run_algorithm_fast(img, pinset, args)
+        for chord in run_algorithm(img, pinset, args)
             push!(chords, (chord, color))
         end
     end
@@ -147,15 +146,11 @@ function run(input::Vector{GrayImage}, args::DefaultArgs)::Tuple{RGBImage,String
 
     @info loghelper(args) * "Rendering Chords"
     for (n, (chord, color)) in enumerate(chords)
-        # add chord to png image
-        img = gen_img(chord, pinset, args)
-        add_imgs!(images[color], img)
+        apply_sparse_to_image!(images[color], sparse_chord(chord, pinset, args))
 
-        # draw svg shape
         if args["svg"]
             push!(svg, draw_line(chord, pinset, color, args))
         end
-        # save gif frame
         if args["gif"] && n % GIF_INTERVAL == 0
             png = join_channels(images, args["mode"])
             save_frame(png, gif)
@@ -212,8 +207,8 @@ function join_channels(images::Dict{RGBColor,GrayImage}, mode::Val{PaletteMode})
     return complement.(RGB.(clamp01nan.(r), clamp01nan.(g), clamp01nan.(b)))
 end
 
-""" Fast sparse-residual variant of run_algorithm (P1). """
-function run_algorithm_fast(input::GrayImage, pinset::PinSet, args::DefaultArgs)::Vector{Chord}
+""" Greedy chord-selection loop over a persistent sparse residual (P1). """
+function run_algorithm(input::GrayImage, pinset::PinSet, args::DefaultArgs)::Vector{Chord}
     steps = div(args["steps"], length(args["colors"]))
     exclude_repeated = get(args, "exclude-repeated-pins", false)
     npins = length(pinset.pts)
@@ -237,8 +232,7 @@ function run_algorithm_fast(input::GrayImage, pinset::PinSet, args::DefaultArgs)
         @threads for i in eachindex(chords)
             @inbounds scores[i] = score(sparse_chord(chords[i], pinset, args), residual)
         end
-        _, idx = findmin(scores)
-        chord = chords[idx]
+        chord = chords[argmin(scores)]
 
         apply!(sparse_chord(chord, pinset, args), residual)
         push!(output, chord)
@@ -340,92 +334,14 @@ function gen_pins(pins::Int, size::Int)::Vector{Point}
     return round.(coords .+ center)
 end
 
-""" Generate grayscale image representing a line between two pins. """
-function gen_img(chord::Chord, pinset::PinSet, args::DefaultArgs)::GrayImage
-    get!(lru, chord) do
-        # extract parameters from cli args
-        size, blur = args["size"], args["blur"]
-        strength = convert(N0f8, args["line-strength"] / 100)
-
-        # resolve pin indices to points
-        p = pinset.pts[chord[1]]
-        q = pinset.pts[chord[2]]
-
-        # create an empty image with pre-allocated zeros
-        m = zeros(Gray{N0f8}, size, size)
-
-        # Draw the line using Bresenham's algorithm
-        bresenham_line!(m,
-                        round(Int, real(p)), round(Int, imag(p)),
-                        round(Int, real(q)), round(Int, imag(q)),
-                        strength)
-
-        # gaussian filter to smooth the line
-        return imfilter(m, Kernel.gaussian(blur))
+""" Composite sparse chord into per-color accumulator, clamped at 1.0. """
+function apply_sparse_to_image!(img::GrayImage, sc::SparseChord)
+    @inbounds for k in eachindex(sc.idx)
+        i = sc.idx[k]
+        v = Float32(img[i]) + sc.w[k]
+        img[i] = v > 1f0 ? N0f8(1f0) : N0f8(v)
     end
 end
-
-""" Draw a line between two points using Bresenham's line algorithm. """
-function bresenham_line!(img::Matrix{Gray{N0f8}}, x0::Int, y0::Int, x1::Int, y1::Int, strength::N0f8)
-    # Ensure coordinates are within image bounds
-    height, width = size(img)
-    x0 = clamp(x0, 1, width)
-    y0 = clamp(y0, 1, height)
-    x1 = clamp(x1, 1, width)
-    y1 = clamp(y1, 1, height)
-
-    # Calculate line parameters
-    steep = abs(y1 - y0) > abs(x1 - x0)
-
-    # If the line is steep, transpose the image and coordinates
-    if steep
-        x0, y0 = y0, x0
-        x1, y1 = y1, x1
-    end
-
-    # Ensure x0 <= x1
-    if x0 > x1
-        x0, x1 = x1, x0
-        y0, y1 = y1, y0
-    end
-
-    # Calculate deltas and initial error
-    dx = x1 - x0
-    dy = abs(y1 - y0)
-    err = div(dx, 2)
-
-    # Determine step direction
-    y_step = y0 < y1 ? 1 : -1
-    y = y0
-
-    # endpoints are already clamped; interior interpolated y stays in
-    # [min(y0,y1), max(y0,y1)] so per-pixel bounds check is redundant
-    for x in x0:x1
-        if steep
-            @inbounds img[x, y] = strength
-        else
-            @inbounds img[y, x] = strength
-        end
-
-        err -= dy
-        if err < 0
-            y += y_step
-            err += dx
-        end
-    end
-
-    return img
-end
-
-""" Safely inplace add two grayscale images, handling overflow for N0f8 values. """
-function add_imgs!(dst::GrayImage, src::GrayImage)
-    @fastmath @inbounds @simd for i in eachindex(dst, src)
-        val = Float32(dst[i]) + Float32(src[i])
-        dst[i] = val > 1.0f0 ? Gray{N0f8}(1.0f0) : Gray{N0f8}(val)
-    end
-    return dst
-end
-
 
 """ Add a frame to the gif sequence. """
 function save_frame(img::RGBImage, gif::GifWrapper)
@@ -456,11 +372,7 @@ end
 """ Generate SVG header with specified size. """
 function svg_header(args::DefaultArgs)::String
     size = args["size"]
-    blur = args["blur"]
-    return """<svg xmlns="http://www.w3.org/2000/svg" width="$size" height="$size" viewBox="0 0 $size $size">
-    <filter id="blur">
-        <feGaussianBlur stdDeviation="$blur" />
-    </filter>"""
+    return """<svg xmlns="http://www.w3.org/2000/svg" width="$size" height="$size" viewBox="0 0 $size $size">"""
 end
 
 """ Draw a line in SVG format. """
@@ -469,7 +381,7 @@ function draw_line(chord::Chord, pinset::PinSet, color::RGBColor, args::DefaultA
     x1, y1 = real(p), imag(p)
     x2, y2 = real(q), imag(q)
     width = @sprintf("%.2f", args["line-strength"] / 100)
-    return """<line x1="$x1" x2="$x2" y1="$y1" y2="$y2" stroke="#$(hex(color))" stroke-width="$width" filter="url(#blur)"/>"""
+    return """<line x1="$x1" x2="$x2" y1="$y1" y2="$y2" stroke="#$(hex(color))" stroke-width="$width"/>"""
 end
 
 """ Write svg to disk. """
@@ -507,7 +419,7 @@ function plot_chords(input::GrayImage, args::DefaultArgs)::GrayImage
 
     @debug "Plotting chords"
     for j in pinset.nbrs[1]
-        add_imgs!(input, gen_img(chord_key(1, j), pinset, args))
+        apply_sparse_to_image!(input, sparse_chord(chord_key(1, j), pinset, args))
     end
 
     @debug "Done"
