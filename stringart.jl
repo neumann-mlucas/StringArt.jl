@@ -59,10 +59,7 @@ export plot_pins
 export plot_chords
 export plot_color
 
-mutable struct GifWrapper
-    frames::Array{RGBColor}
-    count::Int
-end
+const GifFrames = Vector{RGBImage}
 
 # A wrapper that dispatches based on the OperationType
 function load_image(image_path::String, size::Int, colors::Colors, mode:: StringArtMode)::Vector{GrayImage}
@@ -122,8 +119,9 @@ function crop_to_square(image::Matrix)::Matrix
 end
 
 """ Main function to generate string art image. Returns final image in png, svg and gif formats. """
-function run(input::Vector{GrayImage}, args::DefaultArgs)::Tuple{RGBImage,String,GifWrapper}
-    pinset = build_pinset(args["pins"], args["size"])
+function run(input::Vector{GrayImage}, args::DefaultArgs)::Tuple{RGBImage,String,GifFrames}
+    sz = args["size"]
+    pinset = build_pinset(args["pins"], sz)
 
     # generate all chords to be draw in the canvas
     chords = Tuple[]
@@ -135,31 +133,22 @@ function run(input::Vector{GrayImage}, args::DefaultArgs)::Tuple{RGBImage,String
     end
     shuffle!(chords)
 
-    # initialize output image
-    png = zeros(RGBColor, args["size"], args["size"])
-    # create struct that holds gif frames
-    gif = gen_gif_wrapper(args)
-    # initialize svg content
-    svg = [svg_header(args)]
-    # initialize an image for each color
-    images = Dict(color=>zeros(N0f8, args["size"], args["size"]) for color in args["colors"])
+    frames = RGBImage[]
+    svg = ["""<svg xmlns="http://www.w3.org/2000/svg" width="$sz" height="$sz" viewBox="0 0 $sz $sz">"""]
+    images = Dict(color => zeros(N0f8, sz, sz) for color in args["colors"])
 
     @info loghelper(args) * "Rendering Chords"
     for (n, (chord, color)) in enumerate(chords)
         apply_sparse_to_image!(images[color], sparse_chord(chord, pinset, args))
-
-        if args["svg"]
-            push!(svg, draw_line(chord, pinset, color, args))
-        end
+        args["svg"] && push!(svg, draw_line(chord, pinset, color, args))
         if args["gif"] && n % GIF_INTERVAL == 0
-            png = join_channels(images, args["mode"])
-            save_frame(png, gif)
+            push!(frames, join_channels(images, args["mode"]))
         end
     end
     push!(svg, "</svg>")
 
     png = join_channels(images, args["mode"])
-    return (png, join(svg, "\n"), gif)
+    return (png, join(svg, "\n"), frames)
 end
 
 
@@ -343,36 +332,10 @@ function apply_sparse_to_image!(img::GrayImage, sc::SparseChord)
     end
 end
 
-""" Add a frame to the gif sequence. """
-function save_frame(img::RGBImage, gif::GifWrapper)
-    gif.frames[:, :, gif.count] .= img
-    gif.count += 1
-end
-
 """ Write gif frames to disk. """
-function save_gif(output::String, gif::GifWrapper)
-    gif_frames = gif.frames[:, :, 1:(gif.count-1)]
-    save(output * ".gif", gif_frames, fps=5)
-end
-
-""" Initialize gif wrapper for given step count and color mode. """
-function gen_gif_wrapper(args::Dict)::GifWrapper
-    if !args["gif"]
-        return GifWrapper(Array{RGBColor}(undef, 0, 0, 0), 0)
-    end
-    # exact frame count: run_algorithm produces div(steps, n_colors) chords per
-    # color, save_frame fires every GIF_INTERVAL chords across the shuffled union
-    n_colors = length(args["colors"])
-    total_chords = n_colors * div(args["steps"], n_colors)
-    n_frames = div(total_chords, GIF_INTERVAL)
-    frames = Array{RGBColor}(undef, args["size"], args["size"], n_frames)
-    return GifWrapper(frames, 1)
-end
-
-""" Generate SVG header with specified size. """
-function svg_header(args::DefaultArgs)::String
-    size = args["size"]
-    return """<svg xmlns="http://www.w3.org/2000/svg" width="$size" height="$size" viewBox="0 0 $size $size">"""
+function save_gif(output::String, frames::GifFrames)
+    isempty(frames) && return
+    save(output * ".gif", stack(frames; dims=3), fps=5)
 end
 
 """ Draw a line in SVG format. """
