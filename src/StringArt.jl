@@ -209,58 +209,42 @@ function apply!(c::SparseChord, residual::Vector{Float32})
     end
 end
 
-""" Build or fetch sparse Xiaolin Wu antialiased chord (indices + subpixel weights). """
+""" Build or fetch sparse Bresenham chord (indices + constant weights). """
 function sparse_chord(chord::Chord, pinset::PinSet, cfg::Config)::SparseChord
     get!(sparse_lru, chord) do
         strength = Float32(cfg.line_strength / 100)
         p, q = pinset.pts[chord[1]], pinset.pts[chord[2]]
         idx = Int32[]
         w = Float32[]
-        wu_line!(
+        bresenham_sparse!(
             idx,
             w,
             cfg.size,
-            Float32(real(p)),
-            Float32(imag(p)),
-            Float32(real(q)),
-            Float32(imag(q)),
+            round(Int, real(p)),
+            round(Int, imag(p)),
+            round(Int, real(q)),
+            round(Int, imag(q)),
             strength,
         )
         (idx = idx, w = w)
     end
 end
 
-@inline _lin_idx(row::Int, col::Int, sz::Int) = Int32((col - 1) * sz + row)
-
-@inline function _wu_plot!(
+""" Bresenham that pushes column-major linear indices instead of writing to an image. """
+function bresenham_sparse!(
     idx::Vector{Int32},
     w::Vector{Float32},
     sz::Int,
-    x::Int,
-    y::Int,
-    weight::Float32,
-    steep::Bool,
-)
-    weight > 0.0f0 || return
-    # steep: image coord (y_img=x, x_img=y); non-steep: (y_img=y, x_img=x)
-    row, col = steep ? (x, y) : (y, x)
-    (1 <= row <= sz && 1 <= col <= sz) || return
-    push!(idx, _lin_idx(row, col, sz))
-    push!(w, weight)
-end
-
-""" Xiaolin Wu antialiased line rasterizer, sparse (idx, w) output.
-    Coverage weight per pixel multiplied by `strength`. """
-function wu_line!(
-    idx::Vector{Int32},
-    w::Vector{Float32},
-    sz::Int,
-    x0::Float32,
-    y0::Float32,
-    x1::Float32,
-    y1::Float32,
+    x0::Int,
+    y0::Int,
+    x1::Int,
+    y1::Int,
     strength::Float32,
 )
+    x0 = clamp(x0, 1, sz)
+    y0 = clamp(y0, 1, sz)
+    x1 = clamp(x1, 1, sz)
+    y1 = clamp(y1, 1, sz)
     steep = abs(y1 - y0) > abs(x1 - x0)
     if steep
         x0, y0 = y0, x0
@@ -271,37 +255,23 @@ function wu_line!(
         y0, y1 = y1, y0
     end
     dx = x1 - x0
-    dy = y1 - y0
-    gradient = dx == 0.0f0 ? 1.0f0 : dy / dx
-
-    # first endpoint
-    xend = round(x0)
-    yend = y0 + gradient * (xend - x0)
-    xgap = 1.0f0 - ((x0 + 0.5f0) - floor(x0 + 0.5f0))
-    xpxl1 = Int(xend)
-    ypxl1 = Int(floor(yend))
-    fy = yend - floor(yend)
-    _wu_plot!(idx, w, sz, xpxl1, ypxl1,     strength * (1.0f0 - fy) * xgap, steep)
-    _wu_plot!(idx, w, sz, xpxl1, ypxl1 + 1, strength * fy * xgap,           steep)
-    intery = yend + gradient
-
-    # second endpoint
-    xend = round(x1)
-    yend = y1 + gradient * (xend - x1)
-    xgap = (x1 + 0.5f0) - floor(x1 + 0.5f0)
-    xpxl2 = Int(xend)
-    ypxl2 = Int(floor(yend))
-    fy = yend - floor(yend)
-    _wu_plot!(idx, w, sz, xpxl2, ypxl2,     strength * (1.0f0 - fy) * xgap, steep)
-    _wu_plot!(idx, w, sz, xpxl2, ypxl2 + 1, strength * fy * xgap,           steep)
-
-    # main loop
-    @inbounds for x = (xpxl1 + 1):(xpxl2 - 1)
-        iy = Int(floor(intery))
-        fy = intery - floor(intery)
-        _wu_plot!(idx, w, sz, x, iy,     strength * (1.0f0 - fy), steep)
-        _wu_plot!(idx, w, sz, x, iy + 1, strength * fy,           steep)
-        intery += gradient
+    dy = abs(y1 - y0)
+    err = div(dx, 2)
+    y_step = y0 < y1 ? 1 : -1
+    y = y0
+    for x = x0:x1
+        # column-major: linear index for M[row, col] is (col-1)*nrows + row
+        if steep
+            push!(idx, Int32((y - 1) * sz + x))  # M[x, y]
+        else
+            push!(idx, Int32((x - 1) * sz + y))  # M[y, x]
+        end
+        push!(w, strength)
+        err -= dy
+        if err < 0
+            y += y_step
+            err += dx
+        end
     end
 end
 

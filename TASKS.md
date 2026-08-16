@@ -59,14 +59,12 @@ Legend: **P** = performance, **D** = drawing, **C** = cleanup, **T** = test.
   (measured 10-52× per fixture; SSD improved 3-4× vs C1 baseline).
 - Depends on: C1.
 
-### P2. Xiaolin Wu line ✓ done
-- `wu_line!` replaces `bresenham_sparse!`, writes `(idx, w)` with subpixel
-  coverage weights (2 pixels per column). Endpoint xgap handling per
-  standard Wu algorithm. Bounds check per push (Wu can spill 1 pixel past
-  the endpoint clamp Bresenham enforced).
-- Acceptance: no `imfilter` in hot path (was already gone since T2). Chord
-  weight sum tracks line length × strength (spot check: pin1↔pin90 at
-  N=256 emits 488 idx, sum=61.0 ≈ 243·0.25).
+### P2. Xiaolin Wu line — TODO
+- Replace `bresenham_sparse!` with `wu_line!` writing into `(idx, w)`
+  buffers with subpixel weights.
+- Acceptance: no `imfilter` calls in hot path.
+- Depends on: P1. Bresenham sparse currently produces 1-pixel lines
+  with constant weight; Wu adds native antialiasing.
 
 ### P4. Persistent residual + threaded findmin ✓ partially done
 - `residual::Vector{Float32}` initialized once — done in P1 rewrite.

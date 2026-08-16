@@ -503,216 +503,6 @@ size = 512
 ssd = 43022.88671875
 phase = "pre-p1"
 
-[t2-cleanup."marcus-aurelius::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "42e6cbfa071e7ba7f2765b86adec43c8ddc9d58a194ab8b6c4f4428eddf8a9e8"
-coverage = 0.14673635517106726
-fixture = "marcus-aurelius"
-pins = 180
-alloc_bytes_100steps = 3215256
-wall_clock_s = 3.586099201
-size = 256
-ssd = 24798.9921875
-phase = "t2-cleanup"
-
-[t2-cleanup."moon::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "a0c1827d11fb4b3caea7cc35c9648628ad93b0dde794600d9bb8f1be7aadc146"
-coverage = 0.04282616552222624
-fixture = "moon"
-pins = 180
-alloc_bytes_100steps = 3215720
-wall_clock_s = 0.211267384
-size = 256
-ssd = 25563.697265625
-phase = "t2-cleanup"
-
-[t2-cleanup."great-wave::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "f5438adf6b2b6b157a9a7f44c57bd6524f392f79673116f78dbafad07535b623"
-coverage = 0.2845394736842105
-fixture = "great-wave"
-pins = 180
-alloc_bytes_100steps = 3215656
-wall_clock_s = 0.232154827
-size = 256
-ssd = 9447.90625
-phase = "t2-cleanup"
-
-[p1-sparse."marcus-aurelius::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "efb18921df471cc48b9cc1594eb496c0744329dd2246a454bd1b3187bdf9c968"
-coverage = 0.1602835601213541
-fixture = "marcus-aurelius"
-pins = 180
-alloc_bytes_100steps = 3214344
-wall_clock_s = 6.107895528
-size = 256
-ssd = 21837.0234375
-phase = "p1-sparse"
-
-[p1-sparse."moon::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "7239851f33dfa8b433c5698ef459dda0a0d9654a75081dfc3ac482e8c54a3574"
-coverage = 0.008854354897000361
-fixture = "moon"
-pins = 180
-alloc_bytes_100steps = 3214792
-wall_clock_s = 2.032282511
-size = 256
-ssd = 22331.15234375
-phase = "p1-sparse"
-
-[p1-sparse."great-wave::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "5efab3c62135f73b08c39e44e3056168bd1783e1ab55ac148fe8da09c5641c25"
-coverage = 0.43720095693779903
-fixture = "great-wave"
-pins = 180
-alloc_bytes_100steps = 3214792
-wall_clock_s = 1.557411958
-size = 256
-ssd = 8108.75
-phase = "p1-sparse"
-
-[t2-sparse-compositor."marcus-aurelius::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "42e6cbfa071e7ba7f2765b86adec43c8ddc9d58a194ab8b6c4f4428eddf8a9e8"
-coverage = 0.14673635517106726
-fixture = "marcus-aurelius"
-pins = 180
-alloc_bytes_100steps = 3215256
-wall_clock_s = 3.489323341
-size = 256
-ssd = 24798.9921875
-phase = "t2-sparse-compositor"
-
-[t2-sparse-compositor."moon::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "a0c1827d11fb4b3caea7cc35c9648628ad93b0dde794600d9bb8f1be7aadc146"
-coverage = 0.04282616552222624
-fixture = "moon"
-pins = 180
-alloc_bytes_100steps = 3215656
-wall_clock_s = 0.245128282
-size = 256
-ssd = 25563.697265625
-phase = "t2-sparse-compositor"
-
-[t2-sparse-compositor."great-wave::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "f5438adf6b2b6b157a9a7f44c57bd6524f392f79673116f78dbafad07535b623"
-coverage = 0.2845394736842105
-fixture = "great-wave"
-pins = 180
-alloc_bytes_100steps = 3215656
-wall_clock_s = 0.194101555
-size = 256
-ssd = 9447.90625
-phase = "t2-sparse-compositor"
-
-[t2-gifcleanup."marcus-aurelius::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "42e6cbfa071e7ba7f2765b86adec43c8ddc9d58a194ab8b6c4f4428eddf8a9e8"
-coverage = 0.14673635517106726
-fixture = "marcus-aurelius"
-pins = 180
-alloc_bytes_100steps = 3018336
-wall_clock_s = 3.916887561
-size = 256
-ssd = 24798.9921875
-phase = "t2-gifcleanup"
-
-[t2-gifcleanup."moon::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "a0c1827d11fb4b3caea7cc35c9648628ad93b0dde794600d9bb8f1be7aadc146"
-coverage = 0.04282616552222624
-fixture = "moon"
-pins = 180
-alloc_bytes_100steps = 3018544
-wall_clock_s = 0.349654054
-size = 256
-ssd = 25563.697265625
-phase = "t2-gifcleanup"
-
-[t2-gifcleanup."great-wave::grayscale"]
-steps = 500
-tier = "fast"
-mode = "grayscale"
-sha256 = "f5438adf6b2b6b157a9a7f44c57bd6524f392f79673116f78dbafad07535b623"
-coverage = 0.2845394736842105
-fixture = "great-wave"
-pins = 180
-alloc_bytes_100steps = 3018736
-wall_clock_s = 0.335301348
-size = 256
-ssd = 9447.90625
-phase = "t2-gifcleanup"
-
-[p2-wu."marcus-aurelius::grayscale"]
-fixture = "marcus-aurelius"
-steps = 500
-pins = 180
-tier = "fast"
-mode = "grayscale"
-alloc_bytes_100steps = 3055048
-wall_clock_s = 0.246958618
-size = 256
-ssd = 23503.27734375
-sha256 = "1686fc93b5fd529ad8b2429dcd8d5f205323d978fa37b486f22196bb66c1a0b8"
-phase = "p2-wu"
-coverage = 0.1732300021026704
-
-[p2-wu."moon::grayscale"]
-fixture = "moon"
-steps = 500
-pins = 180
-tier = "fast"
-mode = "grayscale"
-alloc_bytes_100steps = 3055336
-wall_clock_s = 0.076368663
-size = 256
-ssd = 24262.73828125
-sha256 = "178cb1970ac8b588cdc5c077b180561e1c7125fce99b5b2ebb3d5c0958dae110"
-phase = "p2-wu"
-coverage = 0.049271172147933986
-
-[p2-wu."great-wave::grayscale"]
-fixture = "great-wave"
-steps = 500
-pins = 180
-tier = "fast"
-mode = "grayscale"
-alloc_bytes_100steps = 3055112
-wall_clock_s = 0.081857011
-size = 256
-ssd = 8602.44921875
-sha256 = "c0fa9ead8f89516ec2012feab5ecfc18e667d88246afbf0cafc76595d3dd2e4e"
-phase = "p2-wu"
-coverage = 0.4074461722488038
-
 [c1-tuple."girl-pearl::palette6"]
 steps = 1500
 tier = "full"
@@ -1216,3 +1006,171 @@ wall_clock_s = 12.944121819
 size = 512
 ssd = 43022.88671875
 phase = "c1-tuple"
+
+[t2-cleanup."marcus-aurelius::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "42e6cbfa071e7ba7f2765b86adec43c8ddc9d58a194ab8b6c4f4428eddf8a9e8"
+coverage = 0.14673635517106726
+fixture = "marcus-aurelius"
+pins = 180
+alloc_bytes_100steps = 3215256
+wall_clock_s = 3.586099201
+size = 256
+ssd = 24798.9921875
+phase = "t2-cleanup"
+
+[t2-cleanup."moon::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "a0c1827d11fb4b3caea7cc35c9648628ad93b0dde794600d9bb8f1be7aadc146"
+coverage = 0.04282616552222624
+fixture = "moon"
+pins = 180
+alloc_bytes_100steps = 3215720
+wall_clock_s = 0.211267384
+size = 256
+ssd = 25563.697265625
+phase = "t2-cleanup"
+
+[t2-cleanup."great-wave::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "f5438adf6b2b6b157a9a7f44c57bd6524f392f79673116f78dbafad07535b623"
+coverage = 0.2845394736842105
+fixture = "great-wave"
+pins = 180
+alloc_bytes_100steps = 3215656
+wall_clock_s = 0.232154827
+size = 256
+ssd = 9447.90625
+phase = "t2-cleanup"
+
+[p1-sparse."marcus-aurelius::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "efb18921df471cc48b9cc1594eb496c0744329dd2246a454bd1b3187bdf9c968"
+coverage = 0.1602835601213541
+fixture = "marcus-aurelius"
+pins = 180
+alloc_bytes_100steps = 3214344
+wall_clock_s = 6.107895528
+size = 256
+ssd = 21837.0234375
+phase = "p1-sparse"
+
+[p1-sparse."moon::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "7239851f33dfa8b433c5698ef459dda0a0d9654a75081dfc3ac482e8c54a3574"
+coverage = 0.008854354897000361
+fixture = "moon"
+pins = 180
+alloc_bytes_100steps = 3214792
+wall_clock_s = 2.032282511
+size = 256
+ssd = 22331.15234375
+phase = "p1-sparse"
+
+[p1-sparse."great-wave::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "5efab3c62135f73b08c39e44e3056168bd1783e1ab55ac148fe8da09c5641c25"
+coverage = 0.43720095693779903
+fixture = "great-wave"
+pins = 180
+alloc_bytes_100steps = 3214792
+wall_clock_s = 1.557411958
+size = 256
+ssd = 8108.75
+phase = "p1-sparse"
+
+[t2-sparse-compositor."marcus-aurelius::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "42e6cbfa071e7ba7f2765b86adec43c8ddc9d58a194ab8b6c4f4428eddf8a9e8"
+coverage = 0.14673635517106726
+fixture = "marcus-aurelius"
+pins = 180
+alloc_bytes_100steps = 3215256
+wall_clock_s = 3.489323341
+size = 256
+ssd = 24798.9921875
+phase = "t2-sparse-compositor"
+
+[t2-sparse-compositor."moon::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "a0c1827d11fb4b3caea7cc35c9648628ad93b0dde794600d9bb8f1be7aadc146"
+coverage = 0.04282616552222624
+fixture = "moon"
+pins = 180
+alloc_bytes_100steps = 3215656
+wall_clock_s = 0.245128282
+size = 256
+ssd = 25563.697265625
+phase = "t2-sparse-compositor"
+
+[t2-sparse-compositor."great-wave::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "f5438adf6b2b6b157a9a7f44c57bd6524f392f79673116f78dbafad07535b623"
+coverage = 0.2845394736842105
+fixture = "great-wave"
+pins = 180
+alloc_bytes_100steps = 3215656
+wall_clock_s = 0.194101555
+size = 256
+ssd = 9447.90625
+phase = "t2-sparse-compositor"
+
+[t2-gifcleanup."marcus-aurelius::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "42e6cbfa071e7ba7f2765b86adec43c8ddc9d58a194ab8b6c4f4428eddf8a9e8"
+coverage = 0.14673635517106726
+fixture = "marcus-aurelius"
+pins = 180
+alloc_bytes_100steps = 3018336
+wall_clock_s = 3.916887561
+size = 256
+ssd = 24798.9921875
+phase = "t2-gifcleanup"
+
+[t2-gifcleanup."moon::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "a0c1827d11fb4b3caea7cc35c9648628ad93b0dde794600d9bb8f1be7aadc146"
+coverage = 0.04282616552222624
+fixture = "moon"
+pins = 180
+alloc_bytes_100steps = 3018544
+wall_clock_s = 0.349654054
+size = 256
+ssd = 25563.697265625
+phase = "t2-gifcleanup"
+
+[t2-gifcleanup."great-wave::grayscale"]
+steps = 500
+tier = "fast"
+mode = "grayscale"
+sha256 = "f5438adf6b2b6b157a9a7f44c57bd6524f392f79673116f78dbafad07535b623"
+coverage = 0.2845394736842105
+fixture = "great-wave"
+pins = 180
+alloc_bytes_100steps = 3018736
+wall_clock_s = 0.335301348
+size = 256
+ssd = 9447.90625
+phase = "t2-gifcleanup"

@@ -31,7 +31,7 @@ Additionally, the script features a command-line interface (CLI) with various tw
 - Set the pin to be opposite point in the line L.
 
 **Line Generating Function:**
-Each chord is rasterized once with Xiaolin Wu antialiasing into a sparse `(idx, w)` pair — column-major pixel indices and subpixel coverage weights — cached by chord key.
+Each chord is rasterized once (Bresenham) into a sparse `(idx, w)` pair — column-major pixel indices and per-pixel weights — cached by chord key. Antialiased Xiaolin Wu rasterization is planned; for now lines are 1-pixel-thick with constant weight.
 
 **Line Pixel Strength:**
 Opt for low line pixel values to create nuanced shades of gray in the output image.
