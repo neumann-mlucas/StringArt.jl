@@ -59,12 +59,21 @@ Legend: **P** = performance, **D** = drawing, **C** = cleanup, **T** = test.
   (measured 10-52× per fixture; SSD improved 3-4× vs C1 baseline).
 - Depends on: C1.
 
-### P2. Xiaolin Wu line — TODO
-- Replace `bresenham_sparse!` with `wu_line!` writing into `(idx, w)`
-  buffers with subpixel weights.
-- Acceptance: no `imfilter` calls in hot path.
-- Depends on: P1. Bresenham sparse currently produces 1-pixel lines
-  with constant weight; Wu adds native antialiasing.
+### P2. Xiaolin Wu line — deferred (tried + reverted)
+- First attempt (`9835719`, reverted in `57a32ea`) replaced
+  `bresenham_sparse!` with `wu_line!` writing subpixel coverage weights.
+  Total line energy `Σw ≈ length·strength` preserved, but dilution across
+  2 pixels per column halved per-pixel darkening.
+- Full-tier baseline showed SSD +25% (grayscale median, worst +147% on
+  aristotle) vs `c1-tuple`. Output visibly softer / less contrasty than
+  Bresenham. Reverted.
+- Acceptance (original): no `imfilter` in hot path — already met since T2
+  (Bresenham path has no filter), so P2's stated goal is already achieved.
+- Retry path if attempted: bump per-pixel weight ~2× (or expose separate
+  `--wu-strength`) so effective darkening matches Bresenham; compare on
+  edge-heavy fixtures (checkerboard, text) where subpixel accuracy
+  actually pays off.
+- Depends on: P1.
 
 ### P4. Persistent residual + threaded findmin ✓ partially done
 - `residual::Vector{Float32}` initialized once — done in P1 rewrite.
