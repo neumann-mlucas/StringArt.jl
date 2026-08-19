@@ -55,7 +55,9 @@ export plot_pins
 export plot_chords
 export plot_color
 
-""" Load and preprocess input image into per-channel grayscale layers. """
+""" Load and preprocess input image into per-channel grayscale layers.
+    Each layer is histogram-equalized so the greedy scorer sees the full
+    dynamic range regardless of the source image's contrast. """
 function load_image(
     path::String,
     size::Int,
@@ -63,22 +65,30 @@ function load_image(
     mode::StringArtMode,
 )::Vector{GrayImage}
     img = load_square(path, size)
-    if mode == GrayscaleMode
-        return [Gray{N0f8}.(img)]
+    layers = if mode == GrayscaleMode
+        [Gray{N0f8}.(img)]
     elseif mode == RgbMode
-        return [red.(img), green.(img), blue.(img)]
+        [red.(img), green.(img), blue.(img)]
     elseif mode == PaletteMode
-        return _load_palette_layers(img, size, colors)
+        _load_palette_layers(img, size, colors)
+    else
+        error("Unknown StringArtMode: $mode")
     end
-    error("Unknown StringArtMode: $mode")
+    return [GrayImage(adjust_histogram(l, Equalization())) for l in layers]
 end
 
+# Palette layer weight: gaussian in Lab distance. Sharper than the old
+# `10/(1+d)` (which saturated within 10 ΔE); `PALETTE_SIGMA` controls
+# selectivity — lower = tighter color-neighborhood per layer.
+const PALETTE_SIGMA = 15.0
 function _load_palette_layers(img, size::Int, colors::Palette)::Vector{GrayImage}
     lab_img = convert.(Lab{Float64}, img)
     lab_colors = convert.(Lab{Float64}, colors)
+    two_sigma_sq = 2.0 * PALETTE_SIGMA^2
     map(lab_colors) do c
-        layer = clamp01nan.(10.0 ./ (1.0 .+ color_distance.(lab_img, c)))
-        complement.(layer)
+        d2 = color_distance.(lab_img, c) .^ 2
+        weight = exp.(-d2 ./ two_sigma_sq)
+        complement.(clamp01nan.(weight))
     end
 end
 
@@ -161,6 +171,7 @@ end
 function run_algorithm(input::GrayImage, pinset::PinSet, cfg::Config)::Vector{Chord}
     steps = div(cfg.steps, length(cfg.colors))
     npins = length(pinset.pts)
+    sz = cfg.size
 
     residual = vec(Float32.(complement.(input)))
     output = Vector{Chord}()
@@ -170,7 +181,7 @@ function run_algorithm(input::GrayImage, pinset::PinSet, cfg::Config)::Vector{Ch
     scores = Float32[]
     for step = 1:steps
         if step % RANDOMIZED_PIN_INTERVAL == 0
-            pin = rand(1:npins)
+            pin = best_residual_pin(residual, pinset, sz)
         end
         chords = pin2chords[pin]
         (cfg.exclude_repeated_pins && isempty(chords)) && break
@@ -200,12 +211,12 @@ end
     return s
 end
 
-""" Subtract chord weights from residual at chord pixel indices, clamped at 0. """
+""" Subtract chord weights from residual at chord pixel indices.
+    Residual is allowed to go negative — oversaturated pixels contribute a
+    positive term to `score()`, discouraging further chords through them. """
 function apply!(c::SparseChord, residual::Vector{Float32})
     @inbounds for k in eachindex(c.idx)
-        i = c.idx[k]
-        v = residual[i] - c.w[k]
-        residual[i] = v < 0.0f0 ? 0.0f0 : v
+        residual[c.idx[k]] -= c.w[k]
     end
 end
 
@@ -230,7 +241,11 @@ function sparse_chord(chord::Chord, pinset::PinSet, cfg::Config)::SparseChord
     end
 end
 
-""" Bresenham that pushes column-major linear indices instead of writing to an image. """
+""" Bresenham + 5-tap gaussian dilate perpendicular to the major axis.
+    Emulates the sigma=1 gaussian blur c1-tuple/pre-p1 applied post-raster,
+    so per-pixel peak matches (~0.10 at strength=0.25) and stroke energy
+    spreads over 5 rows — restores density on 512-canvas full-tier fixtures. """
+const GAUSS5 = (0.06f0, 0.24f0, 0.40f0, 0.24f0, 0.06f0)
 function bresenham_sparse!(
     idx::Vector{Int32},
     w::Vector{Float32},
@@ -261,12 +276,18 @@ function bresenham_sparse!(
     y = y0
     for x = x0:x1
         # column-major: linear index for M[row, col] is (col-1)*nrows + row
-        if steep
-            push!(idx, Int32((y - 1) * sz + x))  # M[x, y]
-        else
-            push!(idx, Int32((x - 1) * sz + y))  # M[y, x]
+        # kernel offsets -2..+2 perpendicular to major axis
+        for k = 1:5
+            yk = y + (k - 3)
+            (yk < 1 || yk > sz) && continue
+            weight = strength * GAUSS5[k]
+            if steep
+                push!(idx, Int32((yk - 1) * sz + x))   # M[x, yk]
+            else
+                push!(idx, Int32((x - 1) * sz + yk))   # M[yk, x]
+            end
+            push!(w, weight)
         end
-        push!(w, strength)
         err -= dy
         if err < 0
             y += y_step
@@ -277,6 +298,39 @@ end
 
 """ Sorted index pair identifying a chord regardless of endpoint order. """
 @inline chord_key(i::Int, j::Int)::Chord = i < j ? (i, j) : (j, i)
+
+# Half-side of the box scanned around each pin during a restart. ~4% of canvas
+# for 512-tier keeps cost negligible (npins × (2R+1)² pixels per restart).
+const RESTART_BOX_R = 20
+
+""" Pin whose local (R×R) residual sum is highest — jumps the algorithm to
+    where more ink still needs to go instead of uniform random exploration. """
+function best_residual_pin(residual::Vector{Float32}, pinset::PinSet, sz::Int)::Int
+    best_p = 1
+    best_s = -Inf32
+    R = RESTART_BOX_R
+    @inbounds for p in eachindex(pinset.pts)
+        pt = pinset.pts[p]
+        px = round(Int, real(pt))
+        py = round(Int, imag(pt))
+        s = 0.0f0
+        for dx = -R:R
+            x = px + dx
+            (x < 1 || x > sz) && continue
+            col = (x - 1) * sz
+            for dy = -R:R
+                y = py + dy
+                (y < 1 || y > sz) && continue
+                s += residual[col+y]
+            end
+        end
+        if s > best_s
+            best_s = s
+            best_p = p
+        end
+    end
+    return best_p
+end
 
 """ Build PinSet: positions + per-pin neighbor index lists (distance-filtered). """
 function build_pinset(n_pins::Int, canvas::Int)::PinSet
