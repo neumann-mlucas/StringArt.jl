@@ -53,26 +53,34 @@ const TIER_CFG = Dict(
         modes = [:grayscale, :rgb, :palette6],
         filter = f -> true,
     ),
+    :high => (
+        size = 512,
+        pins = 320,
+        steps = 3000,
+        modes = [:grayscale, :rgb, :palette6],
+        filter = f -> true,
+    ),
+    :ultra => (
+        size = 1024,
+        pins = 480,
+        steps = 6000,
+        modes = [:grayscale, :rgb, :palette6],
+        filter = f -> true,
+    ),
 )
 
-function build_cfg(mode::Symbol, cfg; steps::Int = cfg.steps)::StringArt.Config
+function build_cfg(mode::Symbol, cfg, src::String; steps::Int = cfg.steps)::StringArt.Config
     colors, sa_mode = if mode == :grayscale
         ([RGB{N0f8}(0, 0, 0)], StringArt.GrayscaleMode)
     elseif mode == :rgb
         ([RGB{N0f8}(1, 0, 0), RGB{N0f8}(0, 1, 0), RGB{N0f8}(0, 0, 1)], StringArt.RgbMode)
     elseif mode == :palette6
-        # 6 fixed colors — skip k-means (deterministic baseline).
-        (
-            [
-                RGB{N0f8}(0, 0, 0),
-                RGB{N0f8}(1, 0, 0),
-                RGB{N0f8}(0, 1, 0),
-                RGB{N0f8}(0, 0, 1),
-                RGB{N0f8}(1, 1, 0),
-                RGB{N0f8}(1, 0, 1),
-            ],
-            StringArt.PaletteMode,
-        )
+        # k-means from image (seeded, deterministic). Fixed primaries produced
+        # rainbow noise on natural images — see test_baseline.jl history.
+        Random.seed!(42)
+        img_lab = convert.(StringArt.Lab{Float64}, Images.load(src))
+        lab_centers = StringArt.kmeans_palette_lab(img_lab, 6)
+        (convert.(RGB{N0f8}, lab_centers), StringArt.PaletteMode)
     else
         error("unknown mode $mode")
     end
@@ -119,7 +127,7 @@ function run_one(fixture, mode::Symbol, cfg)
     src = joinpath(HERE, "fixtures", fixture.file)
     isfile(src) || (@warn "missing fixture $src, skip"; return nothing)
 
-    sa_cfg = build_cfg(mode, cfg)
+    sa_cfg = build_cfg(mode, cfg, src)
     Random.seed!(42)
     input = StringArt.load_image(src, sa_cfg.size, sa_cfg.colors, sa_cfg.mode)
 
@@ -128,7 +136,7 @@ function run_one(fixture, mode::Symbol, cfg)
 
     # ponytail: run once for wall+alloc combined. SPEC says @allocated on 100-step
     # slice, we do a separate small-step run to isolate hot-loop alloc from startup.
-    sa_cfg_alloc = build_cfg(mode, cfg; steps = ALLOC_STEPS)
+    sa_cfg_alloc = build_cfg(mode, cfg, src; steps = ALLOC_STEPS)
     input_alloc = StringArt.load_image(src, sa_cfg.size, sa_cfg.colors, sa_cfg.mode)
     Random.seed!(42)
     alloc_b = @allocated StringArt.render(input_alloc, sa_cfg_alloc)
