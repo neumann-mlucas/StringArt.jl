@@ -100,12 +100,15 @@ function render(input::Vector{GrayImage}, cfg::Config)::Tuple{RGBImage,String,Gi
     want_svg = :svg in cfg.formats
     want_gif = :gif in cfg.formats
 
-    # generate all chords, tagged with color-index
-    chords = Tuple{Chord,Int}[]
+    # each color layer picks its own line strength based on target darkness;
+    # keep it per-chord so the compositor draws with the same strength the
+    # algorithm scored against.
+    chords = Tuple{Chord,Int,Float32}[]
     for (ci, (color, img)) in enumerate(zip(cfg.colors, input))
         @info cfg.timer() * "Iterating image with color: $(rgb_hex(color))"
-        for chord in run_algorithm(img, pinset, cfg)
-            push!(chords, (chord, ci))
+        picks, strength = run_algorithm(img, pinset, cfg)
+        for chord in picks
+            push!(chords, (chord, ci, strength))
         end
     end
     shuffle!(chords)
@@ -115,9 +118,9 @@ function render(input::Vector{GrayImage}, cfg::Config)::Tuple{RGBImage,String,Gi
     images = [zeros(N0f8, sz, sz) for _ in cfg.colors]
 
     @info cfg.timer() * "Rendering Chords"
-    for (n, (chord, ci)) in enumerate(chords)
-        apply_sparse_to_image!(images[ci], sparse_chord(chord, pinset, cfg))
-        want_svg && push!(svg, draw_line(chord, pinset, cfg.colors[ci], cfg))
+    for (n, (chord, ci, strength)) in enumerate(chords)
+        apply_sparse_to_image!(images[ci], sparse_chord(chord, pinset, sz), strength)
+        want_svg && push!(svg, draw_line(chord, pinset, cfg.colors[ci], strength))
         if want_gif && n % GIF_INTERVAL == 0
             push!(frames, join_channels(images, cfg.colors, cfg.mode))
         end
@@ -167,13 +170,21 @@ function _join_palette(images::Vector{GrayImage}, colors::Palette)::RGBImage
     return complement.(RGB.(clamp01nan.(r), clamp01nan.(g), clamp01nan.(b)))
 end
 
-""" Greedy chord-selection loop over a persistent sparse residual. """
-function run_algorithm(input::GrayImage, pinset::PinSet, cfg::Config)::Vector{Chord}
+""" Greedy chord-selection loop over a persistent sparse residual.
+    Returns (chosen chords, strength used) so the compositor can render with
+    the same strength the algorithm optimized against. """
+function run_algorithm(
+    input::GrayImage,
+    pinset::PinSet,
+    cfg::Config,
+)::Tuple{Vector{Chord},Float32}
     steps = div(cfg.steps, length(cfg.colors))
     npins = length(pinset.pts)
     sz = cfg.size
 
     residual = vec(Float32.(complement.(input)))
+    strength = adaptive_strength(residual, cfg.line_strength)
+
     output = Vector{Chord}()
     pin2chords = [Chord[chord_key(i, j) for j in pinset.nbrs[i]] for i = 1:npins]
 
@@ -189,20 +200,41 @@ function run_algorithm(input::GrayImage, pinset::PinSet, cfg::Config)::Vector{Ch
         resize!(scores, length(chords))
         fill!(scores, Inf32)
         @threads for i in eachindex(chords)
-            @inbounds scores[i] = score(sparse_chord(chords[i], pinset, cfg), residual)
+            @inbounds scores[i] = score(sparse_chord(chords[i], pinset, sz), residual)
         end
-        chord = chords[argmin(scores)]
+        best_idx = argmin(scores)
+        # score is `-Σ w·residual`; positive means the best available chord
+        # would put more ink where residual is already negative (oversaturated)
+        # than where it's positive — no useful work left, stop.
+        if step > 50 && scores[best_idx] >= 0.0f0
+            @info "early-stop at step $step / $steps (converged)"
+            break
+        end
+        chord = chords[best_idx]
 
-        apply!(sparse_chord(chord, pinset, cfg), residual)
+        apply!(sparse_chord(chord, pinset, sz), residual, strength)
         push!(output, chord)
 
         cfg.exclude_repeated_pins && filter!(c -> c != chord, pin2chords[pin])
         pin = chord[1] == pin ? chord[2] : chord[1]
     end
-    return output
+    return (output, strength)
 end
 
-""" Sparse chord score against residual. Lower (more negative) = better. """
+""" Per-image line strength. Bright targets (few dark pixels) need each
+    chord to count → higher strength. Dark targets (many dark pixels) want
+    finer control across many chord crossings → lower strength.
+    `base` is `cfg.line_strength` (0..100); returned as [0..1] Float32. """
+@inline function adaptive_strength(residual::Vector{Float32}, base::Int)::Float32
+    base_f = Float32(base) / 100.0f0
+    mean_dark = mean(residual)
+    scale = clamp(0.5f0 / (mean_dark + 0.1f0), 0.5f0, 2.0f0)
+    return base_f * scale
+end
+
+""" Sparse chord score against residual. Lower (more negative) = better.
+    Strength is a constant multiplier — irrelevant to argmin ranking, so we
+    score the unit-strength weights cached in `sparse_chord`. """
 @inline function score(c::SparseChord, residual::Vector{Float32})::Float32
     s = 0.0f0
     @inbounds @simd for k in eachindex(c.idx)
@@ -211,31 +243,32 @@ end
     return s
 end
 
-""" Subtract chord weights from residual at chord pixel indices.
+""" Subtract `strength * w` from residual at chord pixel indices.
     Residual is allowed to go negative — oversaturated pixels contribute a
     positive term to `score()`, discouraging further chords through them. """
-function apply!(c::SparseChord, residual::Vector{Float32})
+function apply!(c::SparseChord, residual::Vector{Float32}, strength::Float32)
     @inbounds for k in eachindex(c.idx)
-        residual[c.idx[k]] -= c.w[k]
+        residual[c.idx[k]] -= strength * c.w[k]
     end
 end
 
-""" Build or fetch sparse Bresenham chord (indices + constant weights). """
-function sparse_chord(chord::Chord, pinset::PinSet, cfg::Config)::SparseChord
+""" Build or fetch sparse gaussian chord with unit strength.
+    Callers scale by `strength` at apply-time so the LRU stays valid across
+    fixtures that pick different adaptive strengths. """
+function sparse_chord(chord::Chord, pinset::PinSet, sz::Int)::SparseChord
     get!(sparse_lru, chord) do
-        strength = Float32(cfg.line_strength / 100)
         p, q = pinset.pts[chord[1]], pinset.pts[chord[2]]
         idx = Int32[]
         w = Float32[]
         bresenham_sparse!(
             idx,
             w,
-            cfg.size,
+            sz,
             round(Int, real(p)),
             round(Int, imag(p)),
             round(Int, real(q)),
             round(Int, imag(q)),
-            strength,
+            1.0f0,
         )
         (idx = idx, w = w)
     end
@@ -352,11 +385,12 @@ function gen_pins(pins::Int, size::Int)::Vector{Point}
     return round.(coords .+ center)
 end
 
-""" Composite sparse chord into per-color accumulator, clamped at 1.0. """
-function apply_sparse_to_image!(img::GrayImage, sc::SparseChord)
+""" Composite sparse chord into per-color accumulator at the given `strength`,
+    clamped at 1.0. """
+function apply_sparse_to_image!(img::GrayImage, sc::SparseChord, strength::Float32)
     @inbounds for k in eachindex(sc.idx)
         i = sc.idx[k]
-        v = Float32(img[i]) + sc.w[k]
+        v = Float32(img[i]) + strength * sc.w[k]
         img[i] = v > 1.0f0 ? N0f8(1.0f0) : N0f8(v)
     end
 end
@@ -368,11 +402,11 @@ function save_gif(output::String, frames::GifFrames)
 end
 
 """ Draw a line in SVG format. """
-function draw_line(chord::Chord, pinset::PinSet, color::RGBColor, cfg::Config)::String
+function draw_line(chord::Chord, pinset::PinSet, color::RGBColor, strength::Float32)::String
     p, q = pinset.pts[chord[1]], pinset.pts[chord[2]]
     x1, y1 = real(p), imag(p)
     x2, y2 = real(q), imag(q)
-    width = @sprintf("%.2f", cfg.line_strength / 100)
+    width = @sprintf("%.2f", strength)
     return """<line x1="$x1" x2="$x2" y1="$y1" y2="$y2" stroke="$(rgb_hex(color))" stroke-width="$width"/>"""
 end
 
@@ -399,8 +433,9 @@ end
 """ Visual debug: draw all chords from the first pin. """
 function plot_chords(input::GrayImage, cfg::Config)::GrayImage
     pinset = build_pinset(cfg.pins, cfg.size)
+    strength = Float32(cfg.line_strength / 100)
     for j in pinset.nbrs[1]
-        apply_sparse_to_image!(input, sparse_chord(chord_key(1, j), pinset, cfg))
+        apply_sparse_to_image!(input, sparse_chord(chord_key(1, j), pinset, cfg.size), strength)
     end
     return clamp01nan.(input)
 end
