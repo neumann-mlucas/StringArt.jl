@@ -3191,506 +3191,1010 @@ size = 512
 ssd = 48955.69921875
 phase = "p1-sparse-full"
 
-[p6-ultra."girl-pearl::palette6"]
+[p7-adaptive."girl-pearl::palette6"]
 fixture = "girl-pearl"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697808
+wall_clock_s = 2.49966117
+size = 512
+ssd = 75432.1875
+sha256 = "97171cc79a07c6c7a3b1075cfa32971dcb438216caafdf614f5cda2a6930e155"
+phase = "p7-adaptive"
+coverage = 0.008587482772025304
+
+[p7-adaptive."girl-pearl::grayscale"]
+fixture = "girl-pearl"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6904936
+wall_clock_s = 1.02033666
+size = 512
+ssd = 67450.9140625
+sha256 = "a7e4ce2f5672d23e68ae42c8fc2c25b697d68dafc6467d871e619f7156a1d636"
+phase = "p7-adaptive"
+coverage = 0.3024702265257801
+
+[p7-adaptive."mona-lisa::palette6"]
+fixture = "mona-lisa"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697520
+wall_clock_s = 2.519286631
+size = 512
+ssd = 59021.8359375
+sha256 = "d844a3093bdaa9d25e1b271271959f3a197a90de218b1759884fa73d213e8f09"
+phase = "p7-adaptive"
+coverage = 0.022157249542060026
+
+[p7-adaptive."moon::grayscale"]
+fixture = "moon"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6904936
+wall_clock_s = 1.219291412
+size = 512
+ssd = 93616.34375
+sha256 = "9840fb06325c69597bd034dda0acc37580191133659f63410e4e82af3e27a50b"
+phase = "p7-adaptive"
+coverage = 0.23512938780400144
+
+[p7-adaptive."flowers::grayscale"]
+fixture = "flowers"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6904936
+wall_clock_s = 1.132540648
+size = 512
+ssd = 28419.26953125
+sha256 = "cc5b29b72b37cc600e3f739d7ca2d5652f4087d9fbf6648547e18db1747ac2ed"
+phase = "p7-adaptive"
+coverage = 0.7056283502084574
+
+[p7-adaptive."mandrill::rgb"]
+fixture = "mandrill"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653312
+wall_clock_s = 2.717457087
+size = 512
+ssd = 23889.98046875
+sha256 = "d6e37810458d55908cabc76b61b8faadf7fd58c8d7eacb586b8c833c7afe6b23"
+phase = "p7-adaptive"
+coverage = 0.5270439787485242
+
+[p7-adaptive."van-gogh-self::rgb"]
+fixture = "van-gogh-self"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653312
+wall_clock_s = 2.596524333
+size = 512
+ssd = 16280.4326171875
+sha256 = "e5a125ce84b59e1ce072cc7c8118387aefd5b7f9a305a072714bad26099cfff8"
+phase = "p7-adaptive"
+coverage = 0.6911116967210029
+
+[p7-adaptive."van-gogh-self::palette6"]
+fixture = "van-gogh-self"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697520
+wall_clock_s = 2.551225809
+size = 512
+ssd = 20678.44140625
+sha256 = "cce3bd8b25c6dceb8e7534c7840af386fc144b112bfa16372b6ad9d55449048e"
+phase = "p7-adaptive"
+coverage = 0.46248541203930277
+
+[p7-adaptive."marcus-aurelius::rgb"]
+fixture = "marcus-aurelius"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653312
+wall_clock_s = 2.666442942
+size = 512
+ssd = 100872.640625
+sha256 = "c6f798c09975da9c613d3a7ae983feb507bebb241139943a09facf49ec94e1fa"
+phase = "p7-adaptive"
+coverage = 0.06760072943948729
+
+[p7-adaptive."van-gogh-self::grayscale"]
+fixture = "van-gogh-self"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6904936
+wall_clock_s = 1.150808535
+size = 512
+ssd = 21141.021484375
+sha256 = "976e3399d2dec723a3c13759b2f121879fc4a2a6ea452b36ddaf938ea43982bd"
+phase = "p7-adaptive"
+coverage = 0.4177239016677333
+
+[p7-adaptive."starry-night::grayscale"]
+fixture = "starry-night"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6905224
+wall_clock_s = 1.147687691
+size = 512
+ssd = 45903.7734375
+sha256 = "ddfd46efe929040b3ffd24ce03ae4271fbb146777fcdc7523f1fcee069cd8c88"
+phase = "p7-adaptive"
+coverage = 0.5378894684900606
+
+[p7-adaptive."parrots::rgb"]
+fixture = "parrots"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653312
+wall_clock_s = 2.534354003
+size = 512
+ssd = 32043.515625
+sha256 = "10aaa39ef1646f62e9cce253d2d5027b313ec57243db7824a5b65b2d07418cfb"
+phase = "p7-adaptive"
+coverage = 0.31786585816756635
+
+[p7-adaptive."parrots::palette6"]
+fixture = "parrots"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697520
+wall_clock_s = 2.238895923
+size = 512
+ssd = 39060.0625
+sha256 = "a4340eb90c8695e14059b4ce00dc9bf592a355d590e76effaa2688df44e698e7"
+phase = "p7-adaptive"
+coverage = 0.03597574502699105
+
+[p7-adaptive."mandrill::grayscale"]
+fixture = "mandrill"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6904936
+wall_clock_s = 1.192282335
+size = 512
+ssd = 24569.626953125
+sha256 = "a609f0acad060ca9f903d36c41409294addf360a22fd1460ee00f20da313841e"
+phase = "p7-adaptive"
+coverage = 0.6192074970484062
+
+[p7-adaptive."great-wave::rgb"]
+fixture = "great-wave"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653600
+wall_clock_s = 2.698571179
+size = 512
+ssd = 22799.583984375
+sha256 = "5ae28a2f896727c19791e44b9014a2ca56c8799a7b8e250e831b51000ba2883b"
+phase = "p7-adaptive"
+coverage = 0.5385222489476849
+
+[p7-adaptive."aristotle::grayscale"]
+fixture = "aristotle"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6905224
+wall_clock_s = 1.076326316
+size = 512
+ssd = 22028.49609375
+sha256 = "5d046a90453d08c1b98d921f950e5b6b81e8370cf42e6381d12e87eddc720035"
+phase = "p7-adaptive"
+coverage = 0.5480019771111364
+
+[p7-adaptive."marcus-aurelius::palette6"]
+fixture = "marcus-aurelius"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697808
+wall_clock_s = 2.989840384
+size = 512
+ssd = 100405.546875
+sha256 = "1e36c537b5365ade4efa96db0de63deffe08d836fac1d9648c31079f3a8d77fc"
+phase = "p7-adaptive"
+coverage = 0.007684629989568715
+
+[p7-adaptive."starry-night::palette6"]
+fixture = "starry-night"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697808
+wall_clock_s = 2.507728418
+size = 512
+ssd = 53658.6328125
+sha256 = "3684191ec54a67e0ff9ab556c3f70f07a57e6db6ad949c74ded219b2816f4d7f"
+phase = "p7-adaptive"
+coverage = 0.029677146482447483
+
+[p7-adaptive."great-wave::grayscale"]
+fixture = "great-wave"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6904936
+wall_clock_s = 1.219703426
+size = 512
+ssd = 31955.576171875
+sha256 = "dfa6ca6056c21b9d52fda6d6e1b1c7db9f734dc8c353d125df2d9e51bbd63aec"
+phase = "p7-adaptive"
+coverage = 0.5330351773902585
+
+[p7-adaptive."marcus-aurelius::grayscale"]
+fixture = "marcus-aurelius"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6904936
+wall_clock_s = 3.660901619
+size = 512
+ssd = 81355.3515625
+sha256 = "07bbb9642293fd18279564097751858b7d4a246c8a4747eac476c5177a5ab120"
+phase = "p7-adaptive"
+coverage = 0.40523665508468854
+
+[p7-adaptive."hats::grayscale"]
+fixture = "hats"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6904936
+wall_clock_s = 1.252212403
+size = 512
+ssd = 39625.4375
+sha256 = "d48b80f1a6360a2ab44170543c0855a36f0f873324f4213970eae6a9019db2b8"
+phase = "p7-adaptive"
+coverage = 0.8393621453732814
+
+[p7-adaptive."mona-lisa::rgb"]
+fixture = "mona-lisa"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653600
+wall_clock_s = 2.533114608
+size = 512
+ssd = 54099.75
+sha256 = "fd27fc05b045553459ed74c0bb29e86b0901f30bc41d84f81b1bfa235268995a"
+phase = "p7-adaptive"
+coverage = 0.3140763702973087
+
+[p7-adaptive."moon::palette6"]
+fixture = "moon"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697520
+wall_clock_s = 2.567040051
+size = 512
+ssd = 91423.875
+sha256 = "61a9a673f0d090cf4f2ffc2b44eff9c6e9d297287533256b7e3818f10de622c9"
+phase = "p7-adaptive"
+coverage = 0.009898766023721098
+
+[p7-adaptive."girl-pearl::rgb"]
+fixture = "girl-pearl"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653312
+wall_clock_s = 2.466865606
+size = 512
+ssd = 73399.8984375
+sha256 = "3417252b74870b8c1eb43a51013fd30807adb0637b6e291b8b708a576e3cb96f"
+phase = "p7-adaptive"
+coverage = 0.144008198748984
+
+[p7-adaptive."starry-night::rgb"]
+fixture = "starry-night"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653312
+wall_clock_s = 2.570602617
+size = 512
+ssd = 52381.96484375
+sha256 = "a7f76f77bab59fe25c7a4b03b11a5f488900a70e52da2ca3fc4537258696c207"
+phase = "p7-adaptive"
+coverage = 0.2953968701536726
+
+[p7-adaptive."mona-lisa::grayscale"]
+fixture = "mona-lisa"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6904936
+wall_clock_s = 1.130169229
+size = 512
+ssd = 46530.0
+sha256 = "b0045221064f055b43798ef52155163b0b91b3ab746677fe3b9c7002ae4f4de0"
+phase = "p7-adaptive"
+coverage = 0.5951106101169509
+
+[p7-adaptive."aristotle::palette6"]
+fixture = "aristotle"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697808
+wall_clock_s = 2.631839015
+size = 512
+ssd = 16585.04296875
+sha256 = "942f4950daf9627ddb0806c91223be43a288fb9ab7c24c0e8ed809e02ee7149f"
+phase = "p7-adaptive"
+coverage = 0.5288011862666818
+
+[p7-adaptive."aristotle::rgb"]
+fixture = "aristotle"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653312
+wall_clock_s = 2.56384196
+size = 512
+ssd = 17461.544921875
+sha256 = "43a37d9dc68d8d5581bd01085d182c7a9ce1049c504cecc97c17a9be40499335"
+phase = "p7-adaptive"
+coverage = 0.6975780388578381
+
+[p7-adaptive."parrots::grayscale"]
+fixture = "parrots"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "grayscale"
+alloc_bytes_100steps = 6904936
+wall_clock_s = 1.082413114
+size = 512
+ssd = 31839.7265625
+sha256 = "84acd445f5176dc2197e4dcf51b6b3841c0bab4e20a8f34437a18d807185fe56"
+phase = "p7-adaptive"
+coverage = 0.3515492124528581
+
+[p7-adaptive."mandrill::palette6"]
+fixture = "mandrill"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697520
+wall_clock_s = 2.559846577
+size = 512
+ssd = 27511.453125
+sha256 = "512f6657b68a0cc0bddcf5598910d9788b99b700bacbc01cbd2365b0740a8c1a"
+phase = "p7-adaptive"
+coverage = 0.2980740850059032
+
+[p7-adaptive."hats::rgb"]
+fixture = "hats"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653312
+wall_clock_s = 2.592898291
+size = 512
+ssd = 45355.59375
+sha256 = "b3840b98f8d075306a542cccba62998945cd1872a4fc7dc4d2a8583ed12accbc"
+phase = "p7-adaptive"
+coverage = 0.6628536797848567
+
+[p7-adaptive."flowers::palette6"]
+fixture = "flowers"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697520
+wall_clock_s = 2.527961104
+size = 512
+ssd = 36656.6796875
+sha256 = "2e2b70cdde4d86f21b4c682d9aa30e270805871ad5eb593f748c8cde52cb8ac2"
+phase = "p7-adaptive"
+coverage = 0.0445577724836212
+
+[p7-adaptive."hats::palette6"]
+fixture = "hats"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697808
+wall_clock_s = 3.439466012
+size = 512
+ssd = 44055.0234375
+sha256 = "1b33b8ab949154027ca11f4e3001e9243858bac363c3dfd52f75157aa34fef8b"
+phase = "p7-adaptive"
+coverage = 0.19063671830612477
+
+[p7-adaptive."moon::rgb"]
+fixture = "moon"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653312
+wall_clock_s = 2.449355871
+size = 512
+ssd = 105081.984375
+sha256 = "ddb5b7f6d230e49e13b92bf48717d103454e6e19c020af1899dbf697450b5941"
+phase = "p7-adaptive"
+coverage = 0.1041841380136576
+
+[p7-adaptive."great-wave::palette6"]
+fixture = "great-wave"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "palette6"
+alloc_bytes_100steps = 30697520
+wall_clock_s = 2.514694013
+size = 512
+ssd = 18492.2578125
+sha256 = "d05aede721adf5e40a3c3ed699d1e89b542b3a461ed61fa759974ab6a23dde3d"
+phase = "p7-adaptive"
+coverage = 0.463958208057727
+
+[p7-adaptive."flowers::rgb"]
+fixture = "flowers"
+steps = 3000
+pins = 320
+tier = "high"
+mode = "rgb"
+alloc_bytes_100steps = 12653312
+wall_clock_s = 2.495228014
+size = 512
+ssd = 30588.533203125
+sha256 = "7eee69ef938f7f00510d52718728cfd760e12c3a0f813f4cdbecd912a96bf569"
+phase = "p7-adaptive"
+coverage = 0.6063877307921381
+
+[p6-ultra."girl-pearl::palette6"]
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "d1ec3fca87ebf939f603a9f01f2378792134a8eeaaf0940ec41e7f3fab5f6503"
+coverage = 0.012417462435659695
+fixture = "girl-pearl"
+pins = 480
 alloc_bytes_100steps = 97946904
 wall_clock_s = 29.306593668
 size = 1024
 ssd = 295496.4375
-sha256 = "d1ec3fca87ebf939f603a9f01f2378792134a8eeaaf0940ec41e7f3fab5f6503"
 phase = "p6-ultra"
-coverage = 0.012417462435659695
 
 [p6-ultra."girl-pearl::grayscale"]
-fixture = "girl-pearl"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "a25c2d760850fc83c1a10725720b859ce8ff810345381676092369586b654834"
+coverage = 0.4053742569452869
+fixture = "girl-pearl"
+pins = 480
 alloc_bytes_100steps = 16604560
 wall_clock_s = 34.363462324
 size = 1024
 ssd = 251126.15625
-sha256 = "a25c2d760850fc83c1a10725720b859ce8ff810345381676092369586b654834"
 phase = "p6-ultra"
-coverage = 0.4053742569452869
 
 [p6-ultra."mona-lisa::palette6"]
-fixture = "mona-lisa"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "17bae614108c788034cd9f9b3772d8b185c982f7cbfc61d6524d804f60ed1d66"
+coverage = 0.021830939548708107
+fixture = "mona-lisa"
+pins = 480
 alloc_bytes_100steps = 97939432
 wall_clock_s = 32.981954691
 size = 1024
 ssd = 230511.46875
-sha256 = "17bae614108c788034cd9f9b3772d8b185c982f7cbfc61d6524d804f60ed1d66"
 phase = "p6-ultra"
-coverage = 0.021830939548708107
 
 [p6-ultra."moon::grayscale"]
-fixture = "moon"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "46237eafff1e18861ab75ca3a9918f173ef4920429b03069bfad3aa7fd796da8"
+coverage = 0.24671781884313917
+fixture = "moon"
+pins = 480
 alloc_bytes_100steps = 16604400
 wall_clock_s = 34.252467582
 size = 1024
 ssd = 324082.5625
-sha256 = "46237eafff1e18861ab75ca3a9918f173ef4920429b03069bfad3aa7fd796da8"
 phase = "p6-ultra"
-coverage = 0.24671781884313917
 
 [p6-ultra."flowers::grayscale"]
-fixture = "flowers"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "340ce71a64fbf7e12b28ba38a519ade2be38e9c1eb6dee528e6096d3ab794d99"
+coverage = 0.6325371219235525
+fixture = "flowers"
+pins = 480
 alloc_bytes_100steps = 16604912
 wall_clock_s = 30.896814184
 size = 1024
 ssd = 162323.46875
-sha256 = "340ce71a64fbf7e12b28ba38a519ade2be38e9c1eb6dee528e6096d3ab794d99"
 phase = "p6-ultra"
-coverage = 0.6325371219235525
 
 [p6-ultra."mandrill::rgb"]
-fixture = "mandrill"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "30df3979d4aabff2a27105d5a16c98cca56ad39230b513699d0c1c16c18b5ed0"
+coverage = 0.6927791663603616
+fixture = "mandrill"
+pins = 480
 alloc_bytes_100steps = 34055576
 wall_clock_s = 32.234537221
 size = 1024
 ssd = 90115.1328125
-sha256 = "30df3979d4aabff2a27105d5a16c98cca56ad39230b513699d0c1c16c18b5ed0"
 phase = "p6-ultra"
-coverage = 0.6927791663603616
 
 [p6-ultra."van-gogh-self::rgb"]
-fixture = "van-gogh-self"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "d4227beb448ef07c8db334ac390a66f54c6683cd6fff04883365a3d94a7cb17e"
+coverage = 0.5777057547055591
+fixture = "van-gogh-self"
+pins = 480
 alloc_bytes_100steps = 34055512
 wall_clock_s = 31.791837823
 size = 1024
 ssd = 72472.625
-sha256 = "d4227beb448ef07c8db334ac390a66f54c6683cd6fff04883365a3d94a7cb17e"
 phase = "p6-ultra"
-coverage = 0.5777057547055591
 
 [p6-ultra."van-gogh-self::palette6"]
-fixture = "van-gogh-self"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "6f8ec4bbe3bb3b84ea1a519836b874eab59b1de2baa1e48666cc88bac27ca93b"
+coverage = 0.4573868663444255
+fixture = "van-gogh-self"
+pins = 480
 alloc_bytes_100steps = 97947160
 wall_clock_s = 30.541625199
 size = 1024
 ssd = 82674.296875
-sha256 = "6f8ec4bbe3bb3b84ea1a519836b874eab59b1de2baa1e48666cc88bac27ca93b"
 phase = "p6-ultra"
-coverage = 0.4573868663444255
 
 [p6-ultra."marcus-aurelius::rgb"]
-fixture = "marcus-aurelius"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "ab43ebea42b42167877b8c5f0955885ba0bf0f3edb058415320112b2f0e97930"
+coverage = 0.24763064521879122
+fixture = "marcus-aurelius"
+pins = 480
 alloc_bytes_100steps = 34055768
 wall_clock_s = 34.840459499
 size = 1024
 ssd = 355005.25
-sha256 = "ab43ebea42b42167877b8c5f0955885ba0bf0f3edb058415320112b2f0e97930"
 phase = "p6-ultra"
-coverage = 0.24763064521879122
 
 [p6-ultra."van-gogh-self::grayscale"]
-fixture = "van-gogh-self"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "8ab2f0f43a23838a6664be0bdb998d9987a5dc2763827a88889e202c9c25bad3"
+coverage = 0.13143900235627207
+fixture = "van-gogh-self"
+pins = 480
 alloc_bytes_100steps = 16604464
 wall_clock_s = 30.400260136
 size = 1024
 ssd = 198148.671875
-sha256 = "8ab2f0f43a23838a6664be0bdb998d9987a5dc2763827a88889e202c9c25bad3"
 phase = "p6-ultra"
-coverage = 0.13143900235627207
 
 [p6-ultra."starry-night::grayscale"]
-fixture = "starry-night"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "c42a6e096da10dfd7a261a4077bdc29819e10dae75f1478fd1c184af35cc1c6f"
+coverage = 0.6487367852047462
+fixture = "starry-night"
+pins = 480
 alloc_bytes_100steps = 16604656
 wall_clock_s = 28.890293958
 size = 1024
 ssd = 188155.21875
-sha256 = "c42a6e096da10dfd7a261a4077bdc29819e10dae75f1478fd1c184af35cc1c6f"
 phase = "p6-ultra"
-coverage = 0.6487367852047462
 
 [p6-ultra."parrots::rgb"]
-fixture = "parrots"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "b479c2fedcd22154e7335ec055251196d425dbcf24a9a23648ed9fbeca128a09"
+coverage = 0.39264396566426013
+fixture = "parrots"
+pins = 480
 alloc_bytes_100steps = 34055704
 wall_clock_s = 30.533651258
 size = 1024
 ssd = 123195.9375
-sha256 = "b479c2fedcd22154e7335ec055251196d425dbcf24a9a23648ed9fbeca128a09"
 phase = "p6-ultra"
-coverage = 0.39264396566426013
 
 [p6-ultra."parrots::palette6"]
-fixture = "parrots"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "95bf24d5c3743a4503ee9504516570c67af6897ee3e76ad8534ccc9bfdf6a7d8"
+coverage = 0.03666647717582855
+fixture = "parrots"
+pins = 480
 alloc_bytes_100steps = 97950496
 wall_clock_s = 29.87322443
 size = 1024
 ssd = 155431.59375
-sha256 = "95bf24d5c3743a4503ee9504516570c67af6897ee3e76ad8534ccc9bfdf6a7d8"
 phase = "p6-ultra"
-coverage = 0.03666647717582855
 
 [p6-ultra."mandrill::grayscale"]
-fixture = "mandrill"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "87a2a8cfc9160c36366b6f806d77b22c70666ca20e288a38a1fb050b40d71d5c"
+coverage = 0.29582628831875324
+fixture = "mandrill"
+pins = 480
 alloc_bytes_100steps = 16604368
 wall_clock_s = 32.839496586
 size = 1024
 ssd = 171495.21875
-sha256 = "87a2a8cfc9160c36366b6f806d77b22c70666ca20e288a38a1fb050b40d71d5c"
 phase = "p6-ultra"
-coverage = 0.29582628831875324
 
 [p6-ultra."great-wave::rgb"]
-fixture = "great-wave"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "5f008570dd46acf3f40763437cc1af349da85229982a12274556411186db1289"
+coverage = 0.5983778518712771
+fixture = "great-wave"
+pins = 480
 alloc_bytes_100steps = 34055704
 wall_clock_s = 33.899722431
 size = 1024
 ssd = 109562.453125
-sha256 = "5f008570dd46acf3f40763437cc1af349da85229982a12274556411186db1289"
 phase = "p6-ultra"
-coverage = 0.5983778518712771
 
 [p6-ultra."aristotle::grayscale"]
-fixture = "aristotle"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "3d760e014cab78f08fc9a7d2ad677394ac7d8d48e35b32be813d5a873bee4204"
+coverage = 0.23600852813523185
+fixture = "aristotle"
+pins = 480
 alloc_bytes_100steps = 16604336
 wall_clock_s = 30.946652858
 size = 1024
 ssd = 221066.28125
-sha256 = "3d760e014cab78f08fc9a7d2ad677394ac7d8d48e35b32be813d5a873bee4204"
 phase = "p6-ultra"
-coverage = 0.23600852813523185
 
 [p6-ultra."marcus-aurelius::palette6"]
-fixture = "marcus-aurelius"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "016b8943afd4bdf2b67f1e4bd3f4c051ef63947f7bad36bbbb57799ee339bcc2"
+coverage = 0.015487352495820441
+fixture = "marcus-aurelius"
+pins = 480
 alloc_bytes_100steps = 97947224
 wall_clock_s = 35.789504455
 size = 1024
 ssd = 386186.625
-sha256 = "016b8943afd4bdf2b67f1e4bd3f4c051ef63947f7bad36bbbb57799ee339bcc2"
 phase = "p6-ultra"
-coverage = 0.015487352495820441
 
 [p6-ultra."starry-night::palette6"]
-fixture = "starry-night"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "386ee019e517ea6e216c7f4bc8e5a0dc5af82c13ae54a22c18b2524ed76f6738"
+coverage = 0.031839570391769385
+fixture = "starry-night"
+pins = 480
 alloc_bytes_100steps = 97943120
 wall_clock_s = 32.802039097
 size = 1024
 ssd = 213129.5
-sha256 = "386ee019e517ea6e216c7f4bc8e5a0dc5af82c13ae54a22c18b2524ed76f6738"
 phase = "p6-ultra"
-coverage = 0.031839570391769385
 
 [p6-ultra."great-wave::grayscale"]
-fixture = "great-wave"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "02fe5b54572e78a8f5fe91c5aeb58533298324f711c9bfbba44abe7e3c975ce0"
+coverage = 0.2777694526654928
+fixture = "great-wave"
+pins = 480
 alloc_bytes_100steps = 16604400
 wall_clock_s = 30.690034959
 size = 1024
 ssd = 318846.5
-sha256 = "02fe5b54572e78a8f5fe91c5aeb58533298324f711c9bfbba44abe7e3c975ce0"
 phase = "p6-ultra"
-coverage = 0.2777694526654928
 
 [p6-ultra."marcus-aurelius::grayscale"]
-fixture = "marcus-aurelius"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "f3dffe2437f8d519a35dda2962f4ad006c0dd781ced2fb3eb0ef5cc346226f32"
+coverage = 0.433634611812343
+fixture = "marcus-aurelius"
+pins = 480
 alloc_bytes_100steps = 16604656
 wall_clock_s = 45.036254972
 size = 1024
 ssd = 327850.46875
-sha256 = "f3dffe2437f8d519a35dda2962f4ad006c0dd781ced2fb3eb0ef5cc346226f32"
 phase = "p6-ultra"
-coverage = 0.433634611812343
 
 [p6-ultra."hats::grayscale"]
-fixture = "hats"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "e4f6979c8d0df6e7b3115cf79dc6cf43edab04ecfacfd7f132dee107e8295105"
+coverage = 0.7933211029171359
+fixture = "hats"
+pins = 480
 alloc_bytes_100steps = 16604560
 wall_clock_s = 32.412819635
 size = 1024
 ssd = 165854.78125
-sha256 = "e4f6979c8d0df6e7b3115cf79dc6cf43edab04ecfacfd7f132dee107e8295105"
 phase = "p6-ultra"
-coverage = 0.7933211029171359
 
 [p6-ultra."mona-lisa::rgb"]
-fixture = "mona-lisa"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "53156c40d3a451b048d6e029cf15e82ba978e44dd156dc7836816095b690739b"
+coverage = 0.4930537919617747
+fixture = "mona-lisa"
+pins = 480
 alloc_bytes_100steps = 34055736
 wall_clock_s = 33.592817032
 size = 1024
 ssd = 193965.09375
-sha256 = "53156c40d3a451b048d6e029cf15e82ba978e44dd156dc7836816095b690739b"
 phase = "p6-ultra"
-coverage = 0.4930537919617747
 
 [p6-ultra."moon::palette6"]
-fixture = "moon"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "33280fc7acc26d43d1c2e3102a76fccb69752fe7a00812b15c1f796b9e586aaf"
+coverage = 0.01171966002089173
+fixture = "moon"
+pins = 480
 alloc_bytes_100steps = 97943280
 wall_clock_s = 34.284204945
 size = 1024
 ssd = 361281.34375
-sha256 = "33280fc7acc26d43d1c2e3102a76fccb69752fe7a00812b15c1f796b9e586aaf"
 phase = "p6-ultra"
-coverage = 0.01171966002089173
 
 [p6-ultra."girl-pearl::rgb"]
-fixture = "girl-pearl"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "4f6a21e2fa3a7aaa9b144f8aa28146c915e867457dc85a8bd9520445d159bb9c"
+coverage = 0.27183237725516024
+fixture = "girl-pearl"
+pins = 480
 alloc_bytes_100steps = 34055928
 wall_clock_s = 32.019844634
 size = 1024
 ssd = 275280.0625
-sha256 = "4f6a21e2fa3a7aaa9b144f8aa28146c915e867457dc85a8bd9520445d159bb9c"
 phase = "p6-ultra"
-coverage = 0.27183237725516024
 
 [p6-ultra."starry-night::rgb"]
-fixture = "starry-night"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "6e7fb2598959bad1ae5a0ba0c4c2467e62c8eac45543c0a7dcf1d5e7effc8c86"
+coverage = 0.46238712593157105
+fixture = "starry-night"
+pins = 480
 alloc_bytes_100steps = 34055896
 wall_clock_s = 32.529874933
 size = 1024
 ssd = 192470.21875
-sha256 = "6e7fb2598959bad1ae5a0ba0c4c2467e62c8eac45543c0a7dcf1d5e7effc8c86"
 phase = "p6-ultra"
-coverage = 0.46238712593157105
 
 [p6-ultra."mona-lisa::grayscale"]
-fixture = "mona-lisa"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "44037e2fc1609a758d0af97dd3b46a1ae398a51451a4ebd552109dfb1add688f"
+coverage = 0.7530028123442158
+fixture = "mona-lisa"
+pins = 480
 alloc_bytes_100steps = 16604592
 wall_clock_s = 32.020706859
 size = 1024
 ssd = 178157.484375
-sha256 = "44037e2fc1609a758d0af97dd3b46a1ae398a51451a4ebd552109dfb1add688f"
 phase = "p6-ultra"
-coverage = 0.7530028123442158
 
 [p6-ultra."aristotle::palette6"]
-fixture = "aristotle"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "1474bc0908151d9a072df8ff2cb46188d9862c4cd4f073adf6e16a1f5062aba1"
+coverage = 0.49965735170943426
+fixture = "aristotle"
+pins = 480
 alloc_bytes_100steps = 97946936
 wall_clock_s = 31.802619537
 size = 1024
 ssd = 67957.609375
-sha256 = "1474bc0908151d9a072df8ff2cb46188d9862c4cd4f073adf6e16a1f5062aba1"
 phase = "p6-ultra"
-coverage = 0.49965735170943426
 
 [p6-ultra."aristotle::rgb"]
-fixture = "aristotle"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "7648d91a25a88f2c564a20ca6e65ca8dff2e3c9a274a0a91b29b9f6407e25319"
+coverage = 0.6387535216629864
+fixture = "aristotle"
+pins = 480
 alloc_bytes_100steps = 34056152
 wall_clock_s = 33.454394179
 size = 1024
 ssd = 80410.265625
-sha256 = "7648d91a25a88f2c564a20ca6e65ca8dff2e3c9a274a0a91b29b9f6407e25319"
 phase = "p6-ultra"
-coverage = 0.6387535216629864
 
 [p6-ultra."parrots::grayscale"]
-fixture = "parrots"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "grayscale"
+sha256 = "686f70bbb048b973f0213253cad503fab4c75b21352470380e8509905448c003"
+coverage = 0.2588255357853448
+fixture = "parrots"
+pins = 480
 alloc_bytes_100steps = 16604592
 wall_clock_s = 32.79644923
 size = 1024
 ssd = 186818.0
-sha256 = "686f70bbb048b973f0213253cad503fab4c75b21352470380e8509905448c003"
 phase = "p6-ultra"
-coverage = 0.2588255357853448
 
 [p6-ultra."mandrill::palette6"]
-fixture = "mandrill"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "0334840bb9f353c6261e0876ed3b6be8da0020ee6cb7f48a86dccfbfbea803ba"
+coverage = 0.3457417481437918
+fixture = "mandrill"
+pins = 480
 alloc_bytes_100steps = 97950816
 wall_clock_s = 29.07977752
 size = 1024
 ssd = 106909.84375
-sha256 = "0334840bb9f353c6261e0876ed3b6be8da0020ee6cb7f48a86dccfbfbea803ba"
 phase = "p6-ultra"
-coverage = 0.3457417481437918
 
 [p6-ultra."hats::rgb"]
-fixture = "hats"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "efaddb37f6bcbf1721c8ac0033ad1e1b60727d63372cf915f4821ea846822a1a"
+coverage = 0.7925763795546191
+fixture = "hats"
+pins = 480
 alloc_bytes_100steps = 34055608
 wall_clock_s = 31.865384379
 size = 1024
 ssd = 165815.5625
-sha256 = "efaddb37f6bcbf1721c8ac0033ad1e1b60727d63372cf915f4821ea846822a1a"
 phase = "p6-ultra"
-coverage = 0.7925763795546191
 
 [p6-ultra."flowers::palette6"]
-fixture = "flowers"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "d8fa095127776c1852cbcc30e554bd3f2e69bb206b3681c7443e77943927b3eb"
+coverage = 0.04995769448912609
+fixture = "flowers"
+pins = 480
 alloc_bytes_100steps = 97943504
 wall_clock_s = 33.780418882
 size = 1024
 ssd = 142664.5625
-sha256 = "d8fa095127776c1852cbcc30e554bd3f2e69bb206b3681c7443e77943927b3eb"
 phase = "p6-ultra"
-coverage = 0.04995769448912609
 
 [p6-ultra."hats::palette6"]
-fixture = "hats"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "6be7e929f752d2f6544d1d09dbd38e18ba6d1275191f8d7f2e7b3d356b4609ad"
+coverage = 0.22113742870636102
+fixture = "hats"
+pins = 480
 alloc_bytes_100steps = 97950496
 wall_clock_s = 33.152163222
 size = 1024
 ssd = 170753.0625
-sha256 = "6be7e929f752d2f6544d1d09dbd38e18ba6d1275191f8d7f2e7b3d356b4609ad"
 phase = "p6-ultra"
-coverage = 0.22113742870636102
 
 [p6-ultra."moon::rgb"]
-fixture = "moon"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "dfa67ca93f80c5bada579186c82d2da921bf84c68debc7efa1d6adf1d4e932a7"
+coverage = 0.2038484372534137
+fixture = "moon"
+pins = 480
 alloc_bytes_100steps = 34055704
 wall_clock_s = 34.211418703
 size = 1024
 ssd = 392547.25
-sha256 = "dfa67ca93f80c5bada579186c82d2da921bf84c68debc7efa1d6adf1d4e932a7"
 phase = "p6-ultra"
-coverage = 0.2038484372534137
 
 [p6-ultra."great-wave::palette6"]
-fixture = "great-wave"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "palette6"
+sha256 = "df16a55247d4fbd4ee8b1f33335b1ddef492e2da0663a0425d1ea19197a0ae1f"
+coverage = 0.3294028396958004
+fixture = "great-wave"
+pins = 480
 alloc_bytes_100steps = 97943088
 wall_clock_s = 33.185215396
 size = 1024
 ssd = 73383.546875
-sha256 = "df16a55247d4fbd4ee8b1f33335b1ddef492e2da0663a0425d1ea19197a0ae1f"
 phase = "p6-ultra"
-coverage = 0.3294028396958004
 
 [p6-ultra."flowers::rgb"]
-fixture = "flowers"
 steps = 6000
-pins = 480
 tier = "ultra"
 mode = "rgb"
+sha256 = "4e5a1361703eeae9618593f159d61b71db818509b438401f157aa1bc9670d836"
+coverage = 0.7087800206413701
+fixture = "flowers"
+pins = 480
 alloc_bytes_100steps = 34055704
 wall_clock_s = 33.895570043
 size = 1024
 ssd = 114454.4765625
-sha256 = "4e5a1361703eeae9618593f159d61b71db818509b438401f157aa1bc9670d836"
 phase = "p6-ultra"
-coverage = 0.7087800206413701
