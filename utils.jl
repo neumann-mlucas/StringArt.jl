@@ -25,11 +25,11 @@ function main()
     if fn_name in ("plot_pins", "plot_chords")
         black = [RGB{N0f8}(0, 0, 0)]
         cfg = StringArt.Config(
-            size = args["size"],
-            pins = args["pins"],
-            line_strength = args["line-strength"],
-            mode = StringArt.GrayscaleMode,
-            colors = black,
+            size=args["size"],
+            pins=args["pins"],
+            line_strength=args["line-strength"],
+            mode=StringArt.GrayscaleMode,
+            colors=black,
         )
         inp = StringArt.load_image(input, cfg.size, black, StringArt.GrayscaleMode)[1]
         @info "Running $fn_name..."
@@ -47,8 +47,8 @@ end
 
 function parse_cmd()
     parser = ArgParseSettings(
-        description = "StringArt Utilities - Debug and visualization tools",
-        epilog = "Example: julia utils.jl -f plot_pins -i input.jpg -o debug.png",
+        description="StringArt Utilities - Debug and visualization tools",
+        epilog="Example: julia utils.jl -f plot_pins -i input.jpg -o debug.png",
     )
     StringArt.add_common_args!(parser)
     @add_arg_table! parser begin

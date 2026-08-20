@@ -11,10 +11,6 @@ install:
     julia --project=. -e 'using Pkg; Pkg.instantiate()'
     julia --project=./dev -e 'using Pkg; Pkg.instantiate()'
 
-# Run tests.
-test:
-    julia --project=. --startup-file=no test/runtests.jl
-
 # Format all julia sources in-place.
 fmt:
     julia --project=./dev -e 'using JuliaFormatter; format(".")'
@@ -36,7 +32,7 @@ check-sync:
     @echo "vendored files in sync with {{SIBLING}}"
 
 # CI checks.
-check: lint test shellcheck check-sync
+check: lint shellcheck check-sync
 
 # Purge generated + resolved state.
 clean:

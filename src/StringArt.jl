@@ -266,7 +266,7 @@ function _build_sparse_chord(chord::Chord, pts::Vector{Point}, sz::Int)::SparseC
         round(Int, real(q)),
         round(Int, imag(q)),
     )
-    (idx = idx, w = w)
+    (idx=idx, w=w)
 end
 
 """ Bresenham + 5-tap gaussian dilate perpendicular to the major axis.
@@ -338,11 +338,11 @@ function best_residual_pin(residual::Vector{Float32}, pinset::PinSet, sz::Int)::
         px = round(Int, real(pt))
         py = round(Int, imag(pt))
         s = 0.0f0
-        for dx = -R:R
+        for dx = (-R):R
             x = px + dx
             (x < 1 || x > sz) && continue
             col = (x - 1) * sz
-            for dy = -R:R
+            for dy = (-R):R
                 y = py + dy
                 (y < 1 || y > sz) && continue
                 s += residual[col+y]
@@ -395,7 +395,7 @@ end
 """ Write gif frames to disk. """
 function save_gif(output::String, frames::GifFrames)
     isempty(frames) && return
-    save(output, stack(frames; dims = 3), fps = 5)
+    save(output, stack(frames; dims=3), fps=5)
 end
 
 function draw_line(chord::Chord, pinset::PinSet, color::RGBColor, strength::Float32)::String

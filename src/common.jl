@@ -25,9 +25,7 @@ function resolve_output(spec::AbstractString)::Vector{Tuple{String,Symbol}}
     map(split(spec, ",")) do path
         p = String(strip(path))
         ext = lowercase(splitext(p)[2])
-        fmt = ext == ".png" ? :png :
-              ext == ".svg" ? :svg :
-              ext == ".gif" ? :gif : nothing
+        fmt = ext == ".png" ? :png : ext == ".svg" ? :svg : ext == ".gif" ? :gif : nothing
         if fmt === nothing
             p *= ".png"
             fmt = :png
@@ -44,7 +42,7 @@ function crop_to_square(img::AbstractMatrix)
     s = min(h, w)
     y0 = div(h - s, 2) + 1
     x0 = div(w - s, 2) + 1
-    @views img[y0:(y0 + s - 1), x0:(x0 + s - 1)]
+    @views img[y0:(y0+s-1), x0:(x0+s-1)]
 end
 
 """ Load image, crop to centered square, resize to `size`x`size`. """
@@ -82,8 +80,10 @@ end
 
 # --- SVG helpers ---------------------------------------------------------
 
-svg_open(w::Real, h::Real) =
-    """<svg xmlns="http://www.w3.org/2000/svg" width="$w" height="$h" viewBox="0 0 $w $h">"""
+svg_open(
+    w::Real,
+    h::Real,
+) = """<svg xmlns="http://www.w3.org/2000/svg" width="$w" height="$h" viewBox="0 0 $w $h">"""
 
 const SVG_CLOSE = "</svg>"
 
@@ -108,20 +108,20 @@ function add_common_args!(
 )
     @add_arg_table! parser begin
         "--input", "-i"
-            help = "input image path"
-            arg_type = String
-            required = true
+        help = "input image path"
+        arg_type = String
+        required = true
         "--output", "-o"
-            help = "output path with extension (.png/.svg/.gif); comma-separate for multiple"
-            arg_type = String
-            default = output_default
+        help = "output path with extension (.png/.svg/.gif); comma-separate for multiple"
+        arg_type = String
+        default = output_default
         "--steps"
-            help = "algorithm iteration count"
-            arg_type = Int
-            default = steps_default
+        help = "algorithm iteration count"
+        arg_type = Int
+        default = steps_default
         "--verbose", "-v"
-            help = "verbose (debug) logging"
-            action = :store_true
+        help = "verbose (debug) logging"
+        action = :store_true
     end
 end
 
@@ -139,7 +139,7 @@ mutable struct LogTimer
     start::Dates.DateTime
     last::Dates.DateTime
 end
-LogTimer() = (n = Dates.now(); LogTimer(n, n))
+LogTimer() = (n=Dates.now(); LogTimer(n, n))
 
 function (t::LogTimer)()
     now_dt = Dates.now()

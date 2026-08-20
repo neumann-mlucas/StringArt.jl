@@ -39,8 +39,8 @@ end
 
 function parse_cmd()
     parser = ArgParseSettings(
-        description = "StringArt - Convert images to string art",
-        epilog = "Example: julia main.jl -i input.jpg -o output.png",
+        description="StringArt - Convert images to string art",
+        epilog="Example: julia main.jl -i input.jpg -o output.png",
     )
     StringArt.add_common_args!(parser)
     @add_arg_table! parser begin
@@ -80,14 +80,14 @@ function build_config(args::Dict{String,Any})
     colors, mode = resolve_palette(args)
 
     cfg = StringArt.Config(
-        size = args["size"],
-        pins = args["pins"],
-        steps = args["steps"],
-        line_strength = args["line-strength"],
-        mode = mode,
-        colors = colors,
-        exclude_repeated_pins = args["exclude-repeated-pins"],
-        formats = formats,
+        size=args["size"],
+        pins=args["pins"],
+        steps=args["steps"],
+        line_strength=args["line-strength"],
+        mode=mode,
+        colors=colors,
+        exclude_repeated_pins=args["exclude-repeated-pins"],
+        formats=formats,
     )
     return cfg, outputs, args["input"]
 end
