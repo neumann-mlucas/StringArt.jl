@@ -1,25 +1,34 @@
 # Batch-sweep helpers — vendored in StringArt.jl and MonteCarloArt.jl.
-# Sync manually across both when editing.
+# Sync manually across both when editing. `just check-sync` fails on drift.
 #
-# Caller sets these before sourcing:
-#   PROJECT_DIR   julia project root (has Project.toml)
-#   CORPUS_DIR    fixture dir
-#   OUT_DIR       output dir
-#   NORM_DIR      normalized-PNG cache dir
-#   BENCH_CSV     CSV path
-#   CSV_HEADER    CSV header row
-#   CONFIGS       array of pipe-delim rows; first field is the config name
-#   JULIA_BIN     julia binary (default: julia)
-# Caller defines:
+# On source: exports PROJECT_DIR, CORPUS_DIR, JULIA_BIN.
+# Caller then sets OUT_DIR (via `set_out_dir <subdir>`), JULIA_OPTS,
+# CSV_HEADER, CONFIGS, defines run_config, and calls run_sweep "$@".
+#
+# Caller-defined:
 #   run_config <cfg_row> <input_path> <out_stem>
 #     Should skip-if-exists, invoke julia via julia_timed, and append a
 #     CSV row. `LAST_SECS` and `LAST_STATUS` are populated by julia_timed.
-# Then calls:
+# Sweep driver:
 #   run_sweep "$@"
 #   (positional args are optional subset selectors — file paths or basenames
 #    resolved against CORPUS_DIR; empty argv = full corpus)
 
 set -euo pipefail
+
+# --- shared preamble (auto-computed on source) ---------------------------
+
+_LIB_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+PROJECT_DIR="$(cd -- "${_LIB_DIR}/../.." &>/dev/null && pwd)"
+CORPUS_DIR="${PROJECT_DIR}/test/fixtures"
+JULIA_BIN="${JULIA_BIN:-julia}"
+
+# Set OUT_DIR/NORM_DIR/BENCH_CSV from a single subdir name under test/results/.
+set_out_dir() {
+  OUT_DIR="${PROJECT_DIR}/test/results/$1"
+  NORM_DIR="${OUT_DIR}/_inputs"
+  BENCH_CSV="${OUT_DIR}/bench.csv"
+}
 
 # --- setup / discovery ---------------------------------------------------
 
@@ -48,6 +57,16 @@ normalize_to_png() {
 fmt_time() { local s="$1"; printf '%dm%02ds' $((s / 60)) $((s % 60)); }
 
 git_sha() { git -C "$PROJECT_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown; }
+
+# --- log-grep helpers (safe when nothing matches) ------------------------
+
+extract_circles() {
+  (grep -oE 'with [0-9]+ circles' "$1" 2>/dev/null || true) | awk '{print $2}' | tail -1
+}
+
+extract_stopped_at() {
+  (grep -oE 'Early stop at step [0-9]+' "$1" 2>/dev/null || true) | awk '{print $5}' | tail -1
+}
 
 # --- julia runner --------------------------------------------------------
 

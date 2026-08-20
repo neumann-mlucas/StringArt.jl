@@ -1,0 +1,5 @@
+style = "default"
+margin = 92
+indent = 4
+whitespace_in_kwargs = false
+always_use_return = false

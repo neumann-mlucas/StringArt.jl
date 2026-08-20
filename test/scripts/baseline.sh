@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 # Parametrized baseline runner for StringArt.jl.
 # Sweeps every fixture over {grayscale, rgb, palette6} × {default, exclude-repeated}.
+#
+# Usage:  ./test/scripts/baseline.sh                # full corpus
+#         ./test/scripts/baseline.sh aristotle.png  # subset (basename or path)
+#
+# Env: PHASE (default pre-p1), JULIA_NUM_THREADS (default 8), JULIA_BIN.
 
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-PROJECT_DIR="$(cd -- "${HERE}/../.." &>/dev/null && pwd)"
+source "${HERE}/lib.sh"
+
 PHASE="${PHASE:-pre-p1}"
-CORPUS_DIR="${PROJECT_DIR}/test/fixtures"
-OUT_DIR="${PROJECT_DIR}/test/results/${PHASE}"
-NORM_DIR="${OUT_DIR}/_inputs"
-BENCH_CSV="${OUT_DIR}/bench.csv"
-JULIA_BIN="${JULIA_BIN:-julia}"
+set_out_dir "$PHASE"
 JULIA_OPTS=(-O3 -t "${JULIA_NUM_THREADS:-8}")
 CSV_HEADER="phase,image,config,mode,flag,size,pins,steps,seconds,status,git_sha"
 
@@ -29,8 +31,6 @@ CONFIGS=(
   "palette6_default|palette6|default"
   "palette6_excl|palette6|excl"
 )
-
-source "${HERE}/lib.sh"
 
 mode_flags() {
   case "$1" in

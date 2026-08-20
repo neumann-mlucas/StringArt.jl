@@ -1,6 +1,6 @@
 # common.jl — vendored shared utilities.
 # Kept in sync (by convention) between StringArt.jl/src/ and MonteCarloArt.jl/src/.
-# Edits in one must be mirrored to the other.
+# Edits in one must be mirrored to the other. `just check-sync` fails on drift.
 
 using ArgParse
 using Clustering: kmeans
@@ -25,7 +25,9 @@ function resolve_output(spec::AbstractString)::Vector{Tuple{String,Symbol}}
     map(split(spec, ",")) do path
         p = String(strip(path))
         ext = lowercase(splitext(p)[2])
-        fmt = ext == ".png" ? :png : ext == ".svg" ? :svg : ext == ".gif" ? :gif : nothing
+        fmt = ext == ".png" ? :png :
+              ext == ".svg" ? :svg :
+              ext == ".gif" ? :gif : nothing
         if fmt === nothing
             p *= ".png"
             fmt = :png
@@ -42,12 +44,12 @@ function crop_to_square(img::AbstractMatrix)
     s = min(h, w)
     y0 = div(h - s, 2) + 1
     x0 = div(w - s, 2) + 1
-    @views img[y0:(y0+s-1), x0:(x0+s-1)]
+    @views img[y0:(y0 + s - 1), x0:(x0 + s - 1)]
 end
 
 """ Load image, crop to centered square, resize to `size`x`size`. """
 function load_square(path::AbstractString, size::Int)
-    @assert isfile(path) "Image file not found: $path"
+    isfile(path) || error("Image file not found: $path")
     img = Images.load(path)
     Images.imresize(crop_to_square(img), size, size)
 end
@@ -72,45 +74,54 @@ parse_hex_colors(spec::AbstractString)::Vector{RGB{N0f8}} =
 )
 
 """ K-means palette in Lab space; returns k Lab centroids. """
-function kmeans_palette_lab(img_lab::AbstractMatrix{<:Lab}, k::Int; maxiter::Int = 100)
+function kmeans_palette_lab(img_lab::AbstractMatrix{<:Lab}, k::Int; maxiter::Int=100)
     pixels = reshape(collect(channelview(img_lab)), 3, :)
-    result = kmeans(pixels, k, maxiter = maxiter, display = :none)
+    result = kmeans(pixels, k, maxiter=maxiter, display=:none)
     Lab{Float64}[Lab{Float64}(c...) for c in eachcol(result.centers)]
 end
 
 # --- SVG helpers ---------------------------------------------------------
 
-svg_open(
-    w::Real,
-    h::Real,
-) = """<svg xmlns="http://www.w3.org/2000/svg" width="$w" height="$h" viewBox="0 0 $w $h">"""
+svg_open(w::Real, h::Real) =
+    """<svg xmlns="http://www.w3.org/2000/svg" width="$w" height="$h" viewBox="0 0 $w $h">"""
 
 const SVG_CLOSE = "</svg>"
 
 rgb_hex(c::RGB) = "#" * hex(c)
 rgb_hex(c::Lab) = rgb_hex(convert(RGB{N0f8}, c))
 
+function write_svg(path::AbstractString, body::AbstractString)
+    open(path, "w") do io
+        write(io, body)
+    end
+end
+
 # --- CLI helpers ---------------------------------------------------------
 
 """ Register CLI args common to both projects (input/output/steps/verbose).
-    Canvas size is per-project (only StringArt uses it). """
-function add_common_args!(parser::ArgParseSettings; steps_default::Int = 1000)
+    Canvas size is per-project (only StringArt uses it).
+    Per-project default output path via `output_default` kwarg. """
+function add_common_args!(
+    parser::ArgParseSettings;
+    steps_default::Int=1000,
+    output_default::AbstractString="output.png",
+)
     @add_arg_table! parser begin
         "--input", "-i"
-        help = "input image path"
-        arg_type = String
-        required = true
+            help = "input image path"
+            arg_type = String
+            required = true
         "--output", "-o"
-        help = "output path with extension (.png/.svg/.gif); comma-separate for multiple"
-        arg_type = String
-        default = "output.png"
+            help = "output path with extension (.png/.svg/.gif); comma-separate for multiple"
+            arg_type = String
+            default = output_default
         "--steps"
-        help = "algorithm iteration count"
-        arg_type = Int
-        default = steps_default
+            help = "algorithm iteration count"
+            arg_type = Int
+            default = steps_default
         "--verbose", "-v"
-        help = "verbose (debug) logging"
-        action = :store_true
+            help = "verbose (debug) logging"
+            action = :store_true
     end
 end
 

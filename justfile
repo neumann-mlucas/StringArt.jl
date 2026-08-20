@@ -1,6 +1,8 @@
 # Dev tasks. Requires: just, julia. Optional: shellcheck.
 # Dev tools (JuliaFormatter, JET) isolated in ./dev/ to keep runtime deps clean.
 
+SIBLING := "../MonteCarloArt.jl"
+
 default:
     @just --list
 
@@ -26,8 +28,15 @@ shellcheck:
     @command -v shellcheck >/dev/null 2>&1 || { echo "shellcheck not installed — apt install shellcheck / pacman -S shellcheck"; exit 1; }
     shellcheck test/scripts/*.sh
 
+# Verify vendored files match sibling project. Fails on any drift.
+check-sync:
+    @[ -d "{{SIBLING}}" ] || { echo "sibling not found: {{SIBLING}}"; exit 1; }
+    diff -q src/common.jl {{SIBLING}}/src/common.jl
+    diff -q test/scripts/lib.sh {{SIBLING}}/test/scripts/lib.sh
+    @echo "vendored files in sync with {{SIBLING}}"
+
 # CI checks.
-check: lint test shellcheck
+check: lint test shellcheck check-sync
 
 # Purge generated + resolved state.
 clean:
