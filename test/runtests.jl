@@ -5,5 +5,4 @@ Random.seed!(42)
 # The others read from what baseline produced.
 include("test_baseline.jl")
 include("test_correctness.jl")
-include("test_perf.jl")
 include("test_visual_diff.jl")

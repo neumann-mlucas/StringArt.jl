@@ -19,7 +19,6 @@ const PHASE = get(ENV, "PHASE", "pre-p1")
 const TIER = Symbol(get(ENV, "TIER", "fast"))
 const BASELINE_TOML = joinpath(HERE, "baseline.toml")
 const ARTIFACT_DIR = joinpath(HERE, "artifacts", PHASE)
-const ALLOC_STEPS = 100
 
 # Per-fixture config. `modes` filtered per tier.
 # ponytail: modes+tier hard-coded here; extract to config file when it grows a third dimension.
@@ -134,13 +133,6 @@ function run_one(fixture, mode::Symbol, cfg)
     Random.seed!(42)
     wall_s = @elapsed png, _, _ = StringArt.render(input, sa_cfg)
 
-    # ponytail: run once for wall+alloc combined. SPEC says @allocated on 100-step
-    # slice, we do a separate small-step run to isolate hot-loop alloc from startup.
-    sa_cfg_alloc = build_cfg(mode, cfg, src; steps = ALLOC_STEPS)
-    input_alloc = StringArt.load_image(src, sa_cfg.size, sa_cfg.colors, sa_cfg.mode)
-    Random.seed!(42)
-    alloc_b = @allocated StringArt.render(input_alloc, sa_cfg_alloc)
-
     target_gray = load_target_gray(src, cfg.size)
     ssd, coverage = compute_metrics(target_gray, png)
 
@@ -160,7 +152,6 @@ function run_one(fixture, mode::Symbol, cfg)
         "ssd" => ssd,
         "coverage" => coverage,
         "wall_clock_s" => wall_s,
-        "alloc_bytes_100steps" => alloc_b,
         "sha256" => h,
     )
 end

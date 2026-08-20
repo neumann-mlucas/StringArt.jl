@@ -22,19 +22,7 @@ function main()
     input = args["input"]
     @info "Loading input image: '$input'"
 
-    if fn_name == "plot_color"
-        colors = StringArt.parse_hex_colors(args["colors"])
-        cfg = StringArt.Config(
-            size = args["size"],
-            pins = args["pins"],
-            line_strength = args["line-strength"],
-            mode = StringArt.RgbMode,
-            colors = colors,
-        )
-        inp = StringArt.load_image(input, cfg.size, colors, StringArt.RgbMode)
-        @info "Running $fn_name..."
-        out = StringArt.plot_color(inp, cfg)
-    elseif fn_name in ("plot_pins", "plot_chords")
+    if fn_name in ("plot_pins", "plot_chords")
         black = [RGB{N0f8}(0, 0, 0)]
         cfg = StringArt.Config(
             size = args["size"],
@@ -49,9 +37,7 @@ function main()
             fn_name == "plot_pins" ? StringArt.plot_pins(inp, cfg) :
             StringArt.plot_chords(inp, cfg)
     else
-        error(
-            "Unknown --function '$fn_name' (expected: plot_pins, plot_chords, plot_color)",
-        )
+        error("Unknown --function '$fn_name' (expected: plot_pins, plot_chords)")
     end
 
     @info "Saving final output image to: '$out_path'"
@@ -71,7 +57,7 @@ function parse_cmd()
         arg_type = Int
         default = 512
         "--function", "-f"
-        help = "util function to execute (plot_pins, plot_chords, plot_color)"
+        help = "util function to execute (plot_pins, plot_chords)"
         arg_type = String
         required = true
         "--pins", "-n"
@@ -82,10 +68,6 @@ function parse_cmd()
         help = "line intensity ranging from 1-100"
         arg_type = Int
         default = 25
-        "--colors"
-        help = "HEX code of colors to use for plot_color (comma-separated)"
-        arg_type = String
-        default = "#FF0000,#00FF00,#0000FF"
     end
     parse_args(parser)
 end

@@ -3,21 +3,16 @@ module TestVisualDiff
 using FileIO
 using Images
 
+include(joinpath(@__DIR__, "..", "src", "StringArt.jl"))
+using .StringArt
+
 const HERE = @__DIR__
 const PHASE = get(ENV, "PHASE", "pre-p1")
 const ARTIFACT_DIR = joinpath(HERE, "artifacts", PHASE)
 const FIXTURES_DIR = joinpath(HERE, "fixtures")
 
-function crop_square(img)
-    height, width = size(img)
-    crop = min(height, width)
-    h0 = div(height - crop, 2) + 1
-    w0 = div(width - crop, 2) + 1
-    return img[h0:(h0+crop-1), w0:(w0+crop-1)]
-end
-
 function match_geometry(target, sz)
-    return Images.imresize(crop_square(target), sz, sz)
+    return Images.imresize(StringArt.crop_to_square(target), sz, sz)
 end
 
 function stretch(a::Matrix)

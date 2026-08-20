@@ -49,16 +49,6 @@ fmt_time() { local s="$1"; printf '%dm%02ds' $((s / 60)) $((s % 60)); }
 
 git_sha() { git -C "$PROJECT_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown; }
 
-# --- log-grep helpers (safe when nothing matches) ------------------------
-
-extract_circles() {
-  (grep -oE 'with [0-9]+ circles' "$1" 2>/dev/null || true) | awk '{print $2}' | tail -1
-}
-
-extract_stopped_at() {
-  (grep -oE 'Early stop at step [0-9]+' "$1" 2>/dev/null || true) | awk '{print $5}' | tail -1
-}
-
 # --- julia runner --------------------------------------------------------
 
 # Timed julia invocation. Args after `log` form the full argv passed to julia.

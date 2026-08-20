@@ -90,12 +90,6 @@ const SVG_CLOSE = "</svg>"
 rgb_hex(c::RGB) = "#" * hex(c)
 rgb_hex(c::Lab) = rgb_hex(convert(RGB{N0f8}, c))
 
-function write_svg(path::AbstractString, body::AbstractString)
-    open(path, "w") do io
-        write(io, body)
-    end
-end
-
 # --- CLI helpers ---------------------------------------------------------
 
 """ Register CLI args common to both projects (input/output/steps/verbose).

@@ -28,7 +28,7 @@ function main()
         if fmt == :png
             save(path, png)
         elseif fmt == :svg
-            StringArt.save_svg(path, svg)
+            write(path, svg)
         elseif fmt == :gif
             StringArt.save_gif(path, gif)
         end
@@ -98,9 +98,10 @@ function resolve_palette(args::Dict{String,Any})
     elseif !isnothing(args["custom-colors"])
         return StringArt.parse_hex_colors(args["custom-colors"]), StringArt.PaletteMode
     elseif args["rgb"]
-        return StringArt.parse_hex_colors("#FF0000,#00FF00,#0000FF"), StringArt.RgbMode
+        return [RGB{N0f8}(1, 0, 0), RGB{N0f8}(0, 1, 0), RGB{N0f8}(0, 0, 1)],
+        StringArt.RgbMode
     end
-    return StringArt.parse_hex_colors("#000000"), StringArt.GrayscaleMode
+    return [RGB{N0f8}(0, 0, 0)], StringArt.GrayscaleMode
 end
 
 function get_palette(path::String, k::Int)::Vector{RGB{N0f8}}

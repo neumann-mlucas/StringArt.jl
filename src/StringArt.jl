@@ -1,7 +1,6 @@
 module StringArt
 
 using Base.Threads: @threads
-using LRUCache
 using Random
 
 include("common.jl")
@@ -18,16 +17,12 @@ const GifFrames = Vector{RGBImage}
 struct PinSet
     pts::Vector{Point}
     nbrs::Vector{Vector{Int}}
+    chords::Dict{Chord,SparseChord}
 end
 
 const GIF_INTERVAL = 50
 const RANDOMIZED_PIN_INTERVAL = 100
 const SMALL_CHORD_CUTOFF = 0.10
-
-# LRU chord cache. LRUCache.LRU has been thread-safe (internal SpinLock) since
-# v1.4; @threads scoring is safe without an external lock.
-# Sized for pins <= 500: C(500,2) = 124_750 unique chords.
-const sparse_lru = LRU{Chord,SparseChord}(maxsize = 500 * 500)
 
 @enum StringArtMode GrayscaleMode RgbMode PaletteMode
 
@@ -48,12 +43,10 @@ export StringArtMode, GrayscaleMode, RgbMode, PaletteMode
 export load_image
 export render
 export save_gif
-export save_svg
 
 # debug functions
 export plot_pins
 export plot_chords
-export plot_color
 
 """ Load and preprocess input image into per-channel grayscale layers.
     Each layer is histogram-equalized so the greedy scorer sees the full
@@ -119,7 +112,7 @@ function render(input::Vector{GrayImage}, cfg::Config)::Tuple{RGBImage,String,Gi
 
     @info cfg.timer() * "Rendering Chords"
     for (n, (chord, ci, strength)) in enumerate(chords)
-        apply_sparse_to_image!(images[ci], sparse_chord(chord, pinset, sz), strength)
+        apply_sparse_to_image!(images[ci], sparse_chord(chord, pinset), strength)
         want_svg && push!(svg, draw_line(chord, pinset, cfg.colors[ci], strength))
         if want_gif && n % GIF_INTERVAL == 0
             push!(frames, join_channels(images, cfg.colors, cfg.mode))
@@ -155,12 +148,10 @@ function _join_palette(images::Vector{GrayImage}, colors::Palette)::RGBImage
 
     for (color, img) in zip(colors, images)
         c = complement(color)
-        for i in eachindex(img)
-            intensity = Float64(img[i])
-            r[i] += intensity * c.r
-            g[i] += intensity * c.g
-            b[i] += intensity * c.b
-        end
+        intensity = Float32.(img)
+        r .+= intensity .* Float32(c.r)
+        g .+= intensity .* Float32(c.g)
+        b .+= intensity .* Float32(c.b)
     end
 
     max_val = max(quantile(vec(r), 0.99), quantile(vec(g), 0.99), quantile(vec(b), 0.99), 1)
@@ -200,7 +191,7 @@ function run_algorithm(
         resize!(scores, length(chords))
         fill!(scores, Inf32)
         @threads for i in eachindex(chords)
-            @inbounds scores[i] = score(sparse_chord(chords[i], pinset, sz), residual)
+            @inbounds scores[i] = score(sparse_chord(chords[i], pinset), residual)
         end
         best_idx = argmin(scores)
         # score is `-Σ w·residual`; positive means the best available chord
@@ -212,7 +203,7 @@ function run_algorithm(
         end
         chord = chords[best_idx]
 
-        apply!(sparse_chord(chord, pinset, sz), residual, strength)
+        apply!(sparse_chord(chord, pinset), residual, strength)
         push!(output, chord)
 
         cfg.exclude_repeated_pins && filter!(c -> c != chord, pin2chords[pin])
@@ -252,26 +243,24 @@ function apply!(c::SparseChord, residual::Vector{Float32}, strength::Float32)
     end
 end
 
-""" Build or fetch sparse gaussian chord with unit strength.
-    Callers scale by `strength` at apply-time so the LRU stays valid across
-    fixtures that pick different adaptive strengths. """
-function sparse_chord(chord::Chord, pinset::PinSet, sz::Int)::SparseChord
-    get!(sparse_lru, chord) do
-        p, q = pinset.pts[chord[1]], pinset.pts[chord[2]]
-        idx = Int32[]
-        w = Float32[]
-        bresenham_sparse!(
-            idx,
-            w,
-            sz,
-            round(Int, real(p)),
-            round(Int, imag(p)),
-            round(Int, real(q)),
-            round(Int, imag(q)),
-            1.0f0,
-        )
-        (idx = idx, w = w)
-    end
+""" Sparse gaussian chord lookup. Precomputed at `build_pinset` time so the
+    scoring loop is a pure read (no lock, no cache miss). """
+@inline sparse_chord(chord::Chord, pinset::PinSet)::SparseChord = pinset.chords[chord]
+
+function _build_sparse_chord(chord::Chord, pts::Vector{Point}, sz::Int)::SparseChord
+    p, q = pts[chord[1]], pts[chord[2]]
+    idx = Int32[]
+    w = Float32[]
+    bresenham_sparse!(
+        idx,
+        w,
+        sz,
+        round(Int, real(p)),
+        round(Int, imag(p)),
+        round(Int, real(q)),
+        round(Int, imag(q)),
+    )
+    (idx = idx, w = w)
 end
 
 """ Bresenham + 5-tap gaussian dilate perpendicular to the major axis.
@@ -287,7 +276,6 @@ function bresenham_sparse!(
     y0::Int,
     x1::Int,
     y1::Int,
-    strength::Float32,
 )
     x0 = clamp(x0, 1, sz)
     y0 = clamp(y0, 1, sz)
@@ -313,13 +301,12 @@ function bresenham_sparse!(
         for k = 1:5
             yk = y + (k - 3)
             (yk < 1 || yk > sz) && continue
-            weight = strength * GAUSS5[k]
             if steep
                 push!(idx, Int32((yk - 1) * sz + x))   # M[x, yk]
             else
                 push!(idx, Int32((x - 1) * sz + yk))   # M[yk, x]
             end
-            push!(w, weight)
+            push!(w, GAUSS5[k])
         end
         err -= dy
         if err < 0
@@ -332,8 +319,7 @@ end
 """ Sorted index pair identifying a chord regardless of endpoint order. """
 @inline chord_key(i::Int, j::Int)::Chord = i < j ? (i, j) : (j, i)
 
-# Half-side of the box scanned around each pin during a restart. ~4% of canvas
-# for 512-tier keeps cost negligible (npins × (2R+1)² pixels per restart).
+# Half-side of pin-restart scan box (pixels).
 const RESTART_BOX_R = 20
 
 """ Pin whose local (R×R) residual sum is highest — jumps the algorithm to
@@ -365,7 +351,9 @@ function best_residual_pin(residual::Vector{Float32}, pinset::PinSet, sz::Int)::
     return best_p
 end
 
-""" Build PinSet: positions + per-pin neighbor index lists (distance-filtered). """
+""" Build PinSet: positions + per-pin neighbor index lists (distance-filtered)
+    + precomputed sparse chord for every neighbor pair. Precompute runs once
+    per pinset so the parallel scoring loop can be pure Dict reads. """
 function build_pinset(n_pins::Int, canvas::Int)::PinSet
     pts = gen_pins(n_pins, canvas)
     threshold = canvas * SMALL_CHORD_CUTOFF
@@ -373,7 +361,12 @@ function build_pinset(n_pins::Int, canvas::Int)::PinSet
         Int[j for j = 1:n_pins if j != i && abs(pts[i] - pts[j]) > threshold] for
         i = 1:n_pins
     ]
-    return PinSet(pts, nbrs)
+    chords = Dict{Chord,SparseChord}()
+    for i = 1:n_pins, j in nbrs[i]
+        c = chord_key(i, j)
+        haskey(chords, c) || (chords[c] = _build_sparse_chord(c, pts, canvas))
+    end
+    return PinSet(pts, nbrs, chords)
 end
 
 """ Generate `n` evenly spaced points around a circle on a square canvas. """
@@ -410,9 +403,6 @@ function draw_line(chord::Chord, pinset::PinSet, color::RGBColor, strength::Floa
     return """<line x1="$x1" x2="$x2" y1="$y1" y2="$y2" stroke="$(rgb_hex(color))" stroke-width="$width"/>"""
 end
 
-""" Write svg to disk. """
-save_svg(output::String, svg::String) = write_svg(output, svg)
-
 ### DEBUGGING UTILITIES
 
 """ Visual debug: overlay pin locations on image. """
@@ -435,12 +425,9 @@ function plot_chords(input::GrayImage, cfg::Config)::GrayImage
     pinset = build_pinset(cfg.pins, cfg.size)
     strength = Float32(cfg.line_strength / 100)
     for j in pinset.nbrs[1]
-        apply_sparse_to_image!(input, sparse_chord(chord_key(1, j), pinset, cfg.size), strength)
+        apply_sparse_to_image!(input, sparse_chord(chord_key(1, j), pinset), strength)
     end
     return clamp01nan.(input)
 end
-
-""" Visual debug: returns first grayscale channel. Stub for color support. """
-plot_color(input::Vector{GrayImage}, cfg::Config)::GrayImage = input[1]
 
 end
