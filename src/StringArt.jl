@@ -21,7 +21,9 @@ struct PinSet
 end
 
 const GIF_INTERVAL = 50
+# too small = thrashes between best-residual pins; too large = greedy gets stuck
 const RANDOMIZED_PIN_INTERVAL = 100
+# short chords add near-zero signal; skip to shrink per-pin neighbor list
 const SMALL_CHORD_CUTOFF = 0.10
 
 @enum StringArtMode GrayscaleMode RgbMode PaletteMode
@@ -154,6 +156,8 @@ function _join_palette(images::Vector{GrayImage}, colors::Palette)::RGBImage
         b .+= intensity .* Float32(c.b)
     end
 
+    # 0.99 quantile (not max): robust to bright-specular outliers that would
+    # otherwise crush overall contrast.
     max_val = max(quantile(vec(r), 0.99), quantile(vec(g), 0.99), quantile(vec(b), 0.99), 1)
     r ./= max_val
     g ./= max_val
@@ -197,6 +201,8 @@ function run_algorithm(
         # score is `-Σ w·residual`; positive means the best available chord
         # would put more ink where residual is already negative (oversaturated)
         # than where it's positive — no useful work left, stop.
+        # Warmup 50 steps: residual needs a few passes to develop negative
+        # regions before the sign check is meaningful.
         if step > 50 && scores[best_idx] >= 0.0f0
             @info "early-stop at step $step / $steps (converged)"
             break
@@ -316,7 +322,6 @@ function bresenham_sparse!(
     end
 end
 
-""" Sorted index pair identifying a chord regardless of endpoint order. """
 @inline chord_key(i::Int, j::Int)::Chord = i < j ? (i, j) : (j, i)
 
 # Half-side of pin-restart scan box (pixels).
@@ -369,7 +374,6 @@ function build_pinset(n_pins::Int, canvas::Int)::PinSet
     return PinSet(pts, nbrs, chords)
 end
 
-""" Generate `n` evenly spaced points around a circle on a square canvas. """
 function gen_pins(pins::Int, size::Int)::Vector{Point}
     center = (size / 2) + (size / 2) * 1im
     radius = 0.95 * (size / 2)
@@ -394,7 +398,6 @@ function save_gif(output::String, frames::GifFrames)
     save(output, stack(frames; dims = 3), fps = 5)
 end
 
-""" Draw a line in SVG format. """
 function draw_line(chord::Chord, pinset::PinSet, color::RGBColor, strength::Float32)::String
     p, q = pinset.pts[chord[1]], pinset.pts[chord[2]]
     x1, y1 = real(p), imag(p)
