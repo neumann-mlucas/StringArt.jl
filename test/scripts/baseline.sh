@@ -8,6 +8,7 @@
 #         ./test/scripts/baseline.sh aristotle.png  # subset (basename or path)
 #
 # Env: PHASE (default pre-p1), JULIA_NUM_THREADS (default 8), JULIA_BIN.
+#      SIZE (default 512), PINS (default 240), STEPS (default 1500).
 
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 source "${HERE}/lib.sh"
@@ -17,10 +18,10 @@ set_out_dir "$PHASE"
 JULIA_OPTS=(-O3 -t "${JULIA_NUM_THREADS:-8}")
 CSV_HEADER="phase,image,config,mode,flag,line_strength,size,pins,steps,seconds,status,git_sha"
 
-# Fixed axes.
-SIZE=512
-PINS=240
-STEPS=1500
+# Fixed axes (env-overridable).
+SIZE="${SIZE:-512}"
+PINS="${PINS:-240}"
+STEPS="${STEPS:-1500}"
 
 # name|mode|flag|line_strength
 # mode: grayscale|rgb|palette6
