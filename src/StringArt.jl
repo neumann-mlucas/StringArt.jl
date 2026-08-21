@@ -71,17 +71,23 @@ function load_image(
     elseif mode == RgbMode
         return _load_rgb_layers(img)
     elseif mode == PaletteMode
-        layers = _load_palette_layers(img, size, colors)
-        return [GrayImage(adjust_histogram(l, Equalization())) for l in layers]
+        # No equalization: palette layers are gaussian selectivity maps in
+        # [0,1]; equalization would spread sparse membership across full range
+        # and blur color assignment.
+        return _load_palette_layers(img, size, colors)
     end
     error("Unknown StringArtMode: $mode")
 end
 
+# Luminance-gain equalization: preserves hue by scaling R/G/B uniformly per
+# pixel by y_eq/y. Gain capped at RGB_GAIN_MAX to stop shadow-pixel blowout
+# where tiny y produces huge gain and channels clamp to white.
+const RGB_GAIN_MAX = 4.0f0
 function _load_rgb_layers(img)::Vector{GrayImage}
     rgb = RGB{N0f8}.(img)
     y = Gray{N0f8}.(rgb)
     y_eq = adjust_histogram(y, Equalization())
-    gain = Float32.(y_eq) ./ max.(Float32.(y), 1.0f-3)
+    gain = min.(Float32.(y_eq) ./ max.(Float32.(y), 1.0f-3), RGB_GAIN_MAX)
     scale_ch(ch) = GrayImage(N0f8.(clamp01nan.(Float32.(ch) .* gain)))
     [scale_ch(red.(rgb)), scale_ch(green.(rgb)), scale_ch(blue.(rgb))]
 end
@@ -197,7 +203,7 @@ function run_algorithm(
     pinset::PinSet,
     cfg::Config,
 )::Tuple{Vector{Chord},Float32}
-    steps = div(cfg.steps, length(cfg.colors))
+    steps = cfg.steps  # per-color budget: color modes need full pass, not STEPS/n_colors
     npins = length(pinset.pts)
     sz = cfg.size
 
