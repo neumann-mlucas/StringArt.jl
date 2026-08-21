@@ -21,8 +21,12 @@ struct PinSet
 end
 
 const GIF_INTERVAL = 50
-# too small = thrashes between best-residual pins; too large = greedy gets stuck
-const RANDOMIZED_PIN_INTERVAL = 100
+# Adaptive restart: track EMA of per-step gain; jump to best-residual pin
+# when EMA drops below RESTART_RATIO of initial gain. Min-interval guard
+# prevents thrashing between neighboring restart candidates.
+const RESTART_EMA_ALPHA = 0.05f0
+const RESTART_RATIO = 0.30f0
+const MIN_RESTART_INTERVAL = 20
 # short chords add near-zero signal; skip to shrink per-pin neighbor list
 const SMALL_CHORD_CUTOFF = 0.10
 
@@ -51,8 +55,9 @@ export plot_pins
 export plot_chords
 
 """ Load and preprocess input image into per-channel grayscale layers.
-    Each layer is histogram-equalized so the greedy scorer sees the full
-    dynamic range regardless of the source image's contrast. """
+    Grayscale + palette layers are histogram-equalized individually.
+    RGB is equalized via a shared luminance gain to preserve hue —
+    per-channel eq decorrelates R/G/B and shifts skin tones / whites. """
 function load_image(
     path::String,
     size::Int,
@@ -60,31 +65,50 @@ function load_image(
     mode::StringArtMode,
 )::Vector{GrayImage}
     img = load_square(path, size)
-    layers = if mode == GrayscaleMode
-        [Gray{N0f8}.(img)]
+    if mode == GrayscaleMode
+        eq = adjust_histogram(Gray{N0f8}.(img), Equalization())
+        return [GrayImage(eq)]
     elseif mode == RgbMode
-        [red.(img), green.(img), blue.(img)]
+        return _load_rgb_layers(img)
     elseif mode == PaletteMode
-        _load_palette_layers(img, size, colors)
-    else
-        error("Unknown StringArtMode: $mode")
+        layers = _load_palette_layers(img, size, colors)
+        return [GrayImage(adjust_histogram(l, Equalization())) for l in layers]
     end
-    return [GrayImage(adjust_histogram(l, Equalization())) for l in layers]
+    error("Unknown StringArtMode: $mode")
 end
 
-# Palette layer weight: gaussian in Lab distance. Sharper than the old
-# `10/(1+d)` (which saturated within 10 ΔE); `PALETTE_SIGMA` controls
-# selectivity — lower = tighter color-neighborhood per layer.
-const PALETTE_SIGMA = 15.0
+function _load_rgb_layers(img)::Vector{GrayImage}
+    rgb = RGB{N0f8}.(img)
+    y = Gray{N0f8}.(rgb)
+    y_eq = adjust_histogram(y, Equalization())
+    gain = Float32.(y_eq) ./ max.(Float32.(y), 1.0f-3)
+    scale_ch(ch) = GrayImage(N0f8.(clamp01nan.(Float32.(ch) .* gain)))
+    [scale_ch(red.(rgb)), scale_ch(green.(rgb)), scale_ch(blue.(rgb))]
+end
+
+# Palette layer weight: gaussian in Lab distance. Sigma auto-tuned from
+# palette geometry — 0.5 × median pairwise ΔE — so tight palettes get
+# selective layers and sparse palettes get overlapping ones.
+const PALETTE_SIGMA_FALLBACK = 15.0
 function _load_palette_layers(img, size::Int, colors::Palette)::Vector{GrayImage}
     lab_img = convert.(Lab{Float64}, img)
     lab_colors = convert.(Lab{Float64}, colors)
-    two_sigma_sq = 2.0 * PALETTE_SIGMA^2
+    sigma = _palette_sigma(lab_colors)
+    two_sigma_sq = 2.0 * sigma^2
     map(lab_colors) do c
         d2 = color_distance.(lab_img, c) .^ 2
         weight = exp.(-d2 ./ two_sigma_sq)
         complement.(clamp01nan.(weight))
     end
+end
+
+function _palette_sigma(lab_colors::Vector{Lab{Float64}})::Float64
+    n = length(lab_colors)
+    n < 2 && return PALETTE_SIGMA_FALLBACK
+    dists = Float64[
+        color_distance(lab_colors[i], lab_colors[j]) for i = 1:n for j = (i+1):n
+    ]
+    max(0.5 * median(dists), 1.0)
 end
 
 """ Main entry point. Returns (png, svg_string, gif_frames).
@@ -156,12 +180,12 @@ function _join_palette(images::Vector{GrayImage}, colors::Palette)::RGBImage
         b .+= intensity .* Float32(c.b)
     end
 
-    # 0.99 quantile (not max): robust to bright-specular outliers that would
-    # otherwise crush overall contrast.
-    max_val = max(quantile(vec(r), 0.99), quantile(vec(g), 0.99), quantile(vec(b), 0.99), 1)
-    r ./= max_val
-    g ./= max_val
-    b ./= max_val
+    # Per-channel 0.99 quantile normalization: shared divisor lets the
+    # dominant channel dim the others. 0.99 (not max) stays robust to
+    # bright-specular outliers that would otherwise crush contrast.
+    r ./= max(quantile(vec(r), 0.99), 1.0f0)
+    g ./= max(quantile(vec(g), 0.99), 1.0f0)
+    b ./= max(quantile(vec(b), 0.99), 1.0f0)
     return complement.(RGB.(clamp01nan.(r), clamp01nan.(g), clamp01nan.(b)))
 end
 
@@ -185,10 +209,10 @@ function run_algorithm(
 
     pin = rand(1:npins)
     scores = Float32[]
+    ema_gain = 0.0f0
+    initial_gain = 0.0f0
+    last_restart = 0
     for step = 1:steps
-        if step % RANDOMIZED_PIN_INTERVAL == 0
-            pin = best_residual_pin(residual, pinset, sz)
-        end
         chords = pin2chords[pin]
         (cfg.exclude_repeated_pins && isempty(chords)) && break
 
@@ -198,22 +222,39 @@ function run_algorithm(
             @inbounds scores[i] = score(sparse_chord(chords[i], pinset), residual)
         end
         best_idx = argmin(scores)
-        # score is `-Σ w·residual`; positive means the best available chord
-        # would put more ink where residual is already negative (oversaturated)
-        # than where it's positive — no useful work left, stop.
-        # Warmup 50 steps: residual needs a few passes to develop negative
-        # regions before the sign check is meaningful.
-        if step > 50 && scores[best_idx] >= 0.0f0
+        best_score = scores[best_idx]
+        # score is `-Σ w·residual·|residual|`; positive means the best chord
+        # would put more ink into oversaturated pixels than into needy ones —
+        # no useful work left, stop. Warmup 50 steps: residual needs a few
+        # passes to develop negative regions before sign check is meaningful.
+        if step > 50 && best_score >= 0.0f0
             @info "early-stop at step $step / $steps (converged)"
             break
         end
         chord = chords[best_idx]
 
+        gain = -best_score
+        if step == 1
+            initial_gain = gain
+            ema_gain = gain
+        else
+            ema_gain = RESTART_EMA_ALPHA * gain + (1 - RESTART_EMA_ALPHA) * ema_gain
+        end
+
         apply!(sparse_chord(chord, pinset), residual, strength)
         push!(output, chord)
 
         cfg.exclude_repeated_pins && filter!(c -> c != chord, pin2chords[pin])
-        pin = chord[1] == pin ? chord[2] : chord[1]
+        stalled =
+            step - last_restart >= MIN_RESTART_INTERVAL &&
+            ema_gain < RESTART_RATIO * initial_gain
+        if stalled
+            pin = best_residual_pin(residual, pinset, sz)
+            last_restart = step
+            ema_gain = initial_gain  # reset so we don't immediately re-trigger
+        else
+            pin = chord[1] == pin ? chord[2] : chord[1]
+        end
     end
     return (output, strength)
 end
@@ -222,20 +263,23 @@ end
     chord to count → higher strength. Dark targets (many dark pixels) want
     finer control across many chord crossings → lower strength.
     `base` is `cfg.line_strength` (0..100); returned as [0..1] Float32. """
+const TARGET_MEAN_DARK = 0.35f0
 @inline function adaptive_strength(residual::Vector{Float32}, base::Int)::Float32
     base_f = Float32(base) / 100.0f0
-    mean_dark = mean(residual)
-    scale = clamp(0.5f0 / (mean_dark + 0.1f0), 0.5f0, 2.0f0)
+    mean_dark = max(mean(residual), 1.0f-3)
+    scale = clamp(TARGET_MEAN_DARK / mean_dark, 0.5f0, 2.0f0)
     return base_f * scale
 end
 
 """ Sparse chord score against residual. Lower (more negative) = better.
-    Strength is a constant multiplier — irrelevant to argmin ranking, so we
-    score the unit-strength weights cached in `sparse_chord`. """
+    Weight is `residual * |residual|` — magnitude-squared with sign preserved,
+    so dark (large-residual) pixels dominate ranking while oversaturated
+    (negative-residual) pixels still repel via the early-stop sign check. """
 @inline function score(c::SparseChord, residual::Vector{Float32})::Float32
     s = 0.0f0
     @inbounds @simd for k in eachindex(c.idx)
-        s -= c.w[k] * residual[c.idx[k]]
+        r = residual[c.idx[k]]
+        s -= c.w[k] * r * abs(r)
     end
     return s
 end
@@ -398,12 +442,17 @@ function save_gif(output::String, frames::GifFrames)
     save(output, stack(frames; dims=3), fps=5)
 end
 
+# Match raster: Bresenham + GAUSS5 dilation gives ~3 px of full-opacity
+# coverage (middle taps 0.24/0.40/0.24) with 0.40 peak. Emit SVG stroke as
+# a 3-wide line at opacity = strength * peak so per-chord density matches.
+const SVG_STROKE_WIDTH = 3.0
+const SVG_GAUSS_PEAK = 0.40f0
 function draw_line(chord::Chord, pinset::PinSet, color::RGBColor, strength::Float32)::String
     p, q = pinset.pts[chord[1]], pinset.pts[chord[2]]
     x1, y1 = real(p), imag(p)
     x2, y2 = real(q), imag(q)
-    width = @sprintf("%.2f", strength)
-    return """<line x1="$x1" x2="$x2" y1="$y1" y2="$y2" stroke="$(rgb_hex(color))" stroke-width="$width"/>"""
+    opacity = @sprintf("%.3f", clamp(strength * SVG_GAUSS_PEAK, 0.0f0, 1.0f0))
+    return """<line x1="$x1" x2="$x2" y1="$y1" y2="$y2" stroke="$(rgb_hex(color))" stroke-width="$SVG_STROKE_WIDTH" stroke-opacity="$opacity"/>"""
 end
 
 ### DEBUGGING UTILITIES
