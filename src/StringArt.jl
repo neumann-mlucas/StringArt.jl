@@ -218,6 +218,7 @@ function run_algorithm(
     ema_gain = 0.0f0
     initial_gain = 0.0f0
     last_restart = 0
+    just_restarted = false
     for step = 1:steps
         chords = pin2chords[pin]
         (cfg.exclude_repeated_pins && isempty(chords)) && break
@@ -229,14 +230,22 @@ function run_algorithm(
         end
         best_idx = argmin(scores)
         best_score = scores[best_idx]
-        # score is `-Σ w·residual·|residual|`; positive means the best chord
-        # would put more ink into oversaturated pixels than into needy ones —
-        # no useful work left, stop. Warmup 50 steps: residual needs a few
-        # passes to develop negative regions before sign check is meaningful.
+        # score is `-Σ w·residual·|residual|`; positive = best chord puts more
+        # ink into oversaturated pixels than needy ones. Local dead-end at
+        # current pin → jump to best-residual pin. Only break if restart's
+        # pin is ALSO positive → globally converged. Warmup 50 steps.
         if step > 50 && best_score >= 0.0f0
-            @info "early-stop at step $step / $steps (converged)"
-            break
+            if just_restarted
+                @info "early-stop at step $step / $steps (converged)"
+                break
+            end
+            pin = best_residual_pin(residual, pinset, sz)
+            last_restart = step
+            ema_gain = initial_gain
+            just_restarted = true
+            continue
         end
+        just_restarted = false
         chord = chords[best_idx]
 
         gain = -best_score
