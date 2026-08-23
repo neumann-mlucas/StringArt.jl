@@ -25,7 +25,7 @@ Additionally, the script features a command-line interface (CLI) with various tw
 
 - Choose a pin (P).
 - Score all neighbor chords from P against the residual (parallel).
-- Pick the chord (L) with the minimum score.
+- Pick the chord (L) with the minimum score. If the best score is ≥ 0 (local dead-end), restart P to the highest-residual pin; if the restart pin also dead-ends, stop (globally converged).
 - Subtract L's weights from the residual in place.
 - Hop to the other endpoint of L — unless an EMA-gain stall triggers a jump to the highest-residual pin instead.
 
@@ -39,7 +39,7 @@ Each chord is rasterized once (Bresenham + 5-tap gaussian dilation perpendicular
 An EMA of per-step gain (`α = 0.05`) is tracked. When the EMA drops below `0.30 × initial_gain` (and at least 20 steps since the last jump), the next pin becomes the one whose ±20 px residual sum is highest, redirecting effort where ink is still needed. Otherwise the walk hops to the chord's other endpoint.
 
 **Error Function:**
-The greedy pick scores candidates against a persistent `residual::Vector{Float32}` (initial `complement(target)` flattened). Score is `-Σ w[k] · r[k] · |r[k]|` over the pixels the chord touches — magnitude-squared with sign preserved, so dark pixels dominate ranking while oversaturated (negative-residual) pixels contribute a positive term that repels further chords. Once the best score is ≥ 0 (after a 50-step warmup) the loop early-stops as converged.
+The greedy pick scores candidates against a persistent `residual::Vector{Float32}` (initial `complement(target)` flattened). Score is `-Σ w[k] · r[k] · |r[k]|` over the pixels the chord touches — magnitude-squared with sign preserved, so dark pixels dominate ranking while oversaturated (negative-residual) pixels contribute a positive term that repels further chords. After a 50-step warmup, a best score ≥ 0 signals the current pin is dead-ended: the loop jumps to `best_residual_pin` (excluding the current pin) for one retry. If the retry pin also scores ≥ 0, the loop early-stops as globally converged.
 
 **Color Modes:**
 - **Grayscale**: histogram-equalized single layer.

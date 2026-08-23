@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Batch-sweep helpers — vendored in StringArt.jl and MonteCarloArt.jl.
 # Sync manually across both when editing. `just check-sync` fails on drift.
 #
@@ -78,7 +79,9 @@ julia_timed() {
   t0=$(date +%s)
   (cd "$PROJECT_DIR" && "${JULIA_BIN:-julia}" "$@") >"$log" 2>&1 || ec=$?
   t1=$(date +%s)
+  # shellcheck disable=SC2034  # exported to caller via globals
   LAST_SECS=$((t1 - t0))
+  # shellcheck disable=SC2034  # exported to caller via globals
   LAST_STATUS=$([[ $ec -eq 0 ]] && echo ok || echo fail)
 }
 

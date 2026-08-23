@@ -221,7 +221,7 @@ function run_algorithm(
     just_restarted = false
     for step = 1:steps
         chords = pin2chords[pin]
-        (cfg.exclude_repeated_pins && isempty(chords)) && break
+        isempty(chords) && break  # only reachable via --exclude-repeated-pins draining a pin's list
 
         resize!(scores, length(chords))
         fill!(scores, Inf32)
@@ -466,15 +466,14 @@ function save_gif(output::String, frames::GifFrames)
 end
 
 # Match raster: Bresenham + GAUSS5 dilation gives ~3 px of full-opacity
-# coverage (middle taps 0.24/0.40/0.24) with 0.40 peak. Emit SVG stroke as
-# a 3-wide line at opacity = strength * peak so per-chord density matches.
+# coverage (middle taps 0.24/0.40/0.24). Emit SVG stroke as a 3-wide line
+# at opacity = strength * GAUSS5[3] (peak tap) so per-chord density matches.
 const SVG_STROKE_WIDTH = 3.0
-const SVG_GAUSS_PEAK = 0.40f0
 function draw_line(chord::Chord, pinset::PinSet, color::RGBColor, strength::Float32)::String
     p, q = pinset.pts[chord[1]], pinset.pts[chord[2]]
     x1, y1 = real(p), imag(p)
     x2, y2 = real(q), imag(q)
-    opacity = @sprintf("%.3f", clamp(strength * SVG_GAUSS_PEAK, 0.0f0, 1.0f0))
+    opacity = @sprintf("%.3f", clamp(strength * GAUSS5[3], 0.0f0, 1.0f0))
     return """<line x1="$x1" x2="$x2" y1="$y1" y2="$y2" stroke="$(rgb_hex(color))" stroke-width="$SVG_STROKE_WIDTH" stroke-opacity="$opacity"/>"""
 end
 
