@@ -42,6 +42,7 @@ An EMA of per-step gain (`α = 0.05`) is tracked. When the EMA drops below `0.30
 The greedy pick scores candidates against a persistent `residual::Vector{Float32}` (initial `complement(target)` flattened). Score is `-Σ w[k] · r[k] · |r[k]|` over the pixels the chord touches — magnitude-squared with sign preserved, so dark pixels dominate ranking while oversaturated (negative-residual) pixels contribute a positive term that repels further chords. After a 50-step warmup, a best score ≥ 0 signals the current pin is dead-ended: the loop jumps to `best_residual_pin` (excluding the current pin) for one retry. If the retry pin also scores ≥ 0, the loop early-stops as globally converged.
 
 **Color Modes:**
+
 - **Grayscale**: histogram-equalized single layer.
 - **RGB**: shared luminance gain (`min(y_eq / y, 4)`) applied to R/G/B so hue is preserved (per-channel eq shifts skin tones).
 - **Palette**: k-means centroids in Lab; each layer is a gaussian selectivity map in Lab distance with σ auto-tuned to `0.5 × median pairwise ΔE`.
@@ -186,13 +187,6 @@ Example: julia main.jl -i input.jpg -o output.png
 
 ---
 
-### TODO
+## License
 
-- [x] Write output image as GIF
-- [x] Write output image as SVG
-- [x] Optimize memory usage
-- [x] Support GIF in `--rgb` mode
-- [x] Use user provided colors (`--custom-colors` flag) to create the output image
-- [x] Use color palette (`--palette` flag) from input image to create the output image
-- [x] Enhance Image Contrast (histogram-eq, luminance-gain RGB, adaptive strength)
-- [ ] Port Code to the GPU
+MIT License

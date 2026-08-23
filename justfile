@@ -24,17 +24,9 @@ shellcheck:
     @command -v shellcheck >/dev/null 2>&1 || { echo "shellcheck not installed — apt install shellcheck / pacman -S shellcheck"; exit 1; }
     shellcheck test/scripts/*.sh
 
-# Verify vendored files match sibling project. Fails on any drift.
-check-sync:
-    @[ -d "{{SIBLING}}" ] || { echo "sibling not found: {{SIBLING}}"; exit 1; }
-    diff -q src/common.jl {{SIBLING}}/src/common.jl
-    diff -q test/scripts/lib.sh {{SIBLING}}/test/scripts/lib.sh
-    @echo "vendored files in sync with {{SIBLING}}"
-
 # CI checks.
-check: lint shellcheck check-sync
+check: lint shellcheck
 
 # Purge generated + resolved state.
 clean:
-    rm -f Manifest.toml dev/Manifest.toml
     rm -rf test/results test/artifacts

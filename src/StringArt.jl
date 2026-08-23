@@ -111,9 +111,8 @@ end
 function _palette_sigma(lab_colors::Vector{Lab{Float64}})::Float64
     n = length(lab_colors)
     n < 2 && return PALETTE_SIGMA_FALLBACK
-    dists = Float64[
-        color_distance(lab_colors[i], lab_colors[j]) for i = 1:n for j = (i+1):n
-    ]
+    dists =
+        Float64[color_distance(lab_colors[i], lab_colors[j]) for i = 1:n for j = (i+1):n]
     max(0.5 * median(dists), 1.0)
 end
 
@@ -239,7 +238,7 @@ function run_algorithm(
                 @info "early-stop at step $step / $steps (converged)"
                 break
             end
-            pin = best_residual_pin(residual, pinset, sz; exclude = pin)
+            pin = best_residual_pin(residual, pinset, sz; exclude=pin)
             last_restart = step
             ema_gain = initial_gain
             just_restarted = true
@@ -264,7 +263,7 @@ function run_algorithm(
             step - last_restart >= MIN_RESTART_INTERVAL &&
             ema_gain < RESTART_RATIO * initial_gain
         if stalled
-            pin = best_residual_pin(residual, pinset, sz; exclude = pin)
+            pin = best_residual_pin(residual, pinset, sz; exclude=pin)
             last_restart = step
             ema_gain = initial_gain  # reset so we don't immediately re-trigger
         else
@@ -394,7 +393,7 @@ function best_residual_pin(
     residual::Vector{Float32},
     pinset::PinSet,
     sz::Int;
-    exclude::Int = 0,
+    exclude::Int=0,
 )::Int
     best_p = 1
     best_s = -Inf32
