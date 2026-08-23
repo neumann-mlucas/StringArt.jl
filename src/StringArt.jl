@@ -239,7 +239,7 @@ function run_algorithm(
                 @info "early-stop at step $step / $steps (converged)"
                 break
             end
-            pin = best_residual_pin(residual, pinset, sz)
+            pin = best_residual_pin(residual, pinset, sz; exclude = pin)
             last_restart = step
             ema_gain = initial_gain
             just_restarted = true
@@ -264,7 +264,7 @@ function run_algorithm(
             step - last_restart >= MIN_RESTART_INTERVAL &&
             ema_gain < RESTART_RATIO * initial_gain
         if stalled
-            pin = best_residual_pin(residual, pinset, sz)
+            pin = best_residual_pin(residual, pinset, sz; exclude = pin)
             last_restart = step
             ema_gain = initial_gain  # reset so we don't immediately re-trigger
         else
@@ -387,12 +387,20 @@ end
 const RESTART_BOX_R = 20
 
 """ Pin whose local (R×R) residual sum is highest — jumps the algorithm to
-    where more ink still needs to go instead of uniform random exploration. """
-function best_residual_pin(residual::Vector{Float32}, pinset::PinSet, sz::Int)::Int
+    where more ink still needs to go instead of uniform random exploration.
+    `exclude` skips a specific pin (e.g. current dead-end pin) so restart
+    always yields a distinct target. """
+function best_residual_pin(
+    residual::Vector{Float32},
+    pinset::PinSet,
+    sz::Int;
+    exclude::Int = 0,
+)::Int
     best_p = 1
     best_s = -Inf32
     R = RESTART_BOX_R
     @inbounds for p in eachindex(pinset.pts)
+        p == exclude && continue
         pt = pinset.pts[p]
         px = round(Int, real(pt))
         py = round(Int, imag(pt))
