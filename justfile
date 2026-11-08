@@ -1,8 +1,6 @@
 # Dev tasks. Requires: just, julia. Optional: shellcheck.
 # Dev tools (JuliaFormatter, JET) isolated in ./dev/ to keep runtime deps clean.
 
-SIBLING := "../MonteCarloArt.jl"
-
 default:
     @just --list
 
@@ -10,6 +8,10 @@ default:
 install:
     julia --project=. -e 'using Pkg; Pkg.instantiate()'
     julia --project=./dev -e 'using Pkg; Pkg.instantiate()'
+
+# Run tests.
+test:
+    julia --project=. --startup-file=no test/runtests.jl
 
 # Format all julia sources in-place.
 fmt:
@@ -22,10 +24,10 @@ lint:
 # Shell-script lint. Requires shellcheck binary.
 shellcheck:
     @command -v shellcheck >/dev/null 2>&1 || { echo "shellcheck not installed — apt install shellcheck / pacman -S shellcheck"; exit 1; }
-    shellcheck test/scripts/*.sh
+    shellcheck -x test/scripts/*.sh
 
 # CI checks.
-check: lint shellcheck
+check: lint test shellcheck
 
 # Purge generated + resolved state.
 clean:

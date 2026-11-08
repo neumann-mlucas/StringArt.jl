@@ -61,7 +61,7 @@ The Libraries:
 - Colors
 - FileIO
 - **Images**
-- Dates, Logging, Printf, Random, SHA, Statistics, TOML, Test (stdlib)
+- Dates, Logging, Printf, Random, Statistics, Test (stdlib)
 
 ### Usage
 
@@ -94,6 +94,13 @@ $ julia -O3 -t 8 main.jl -i input.jpg -o output.svg
 
 # PNG + SVG + GIF in a single run
 $ julia -O3 -t 8 main.jl -i input.jpg -o output.png,output.svg,output.gif
+```
+
+### Tests
+
+```bash
+just test    # synthetic 64×64 fixtures, fixed seed
+just check   # JET lint + tests + shellcheck
 ```
 
 ### Debugging Utilities
