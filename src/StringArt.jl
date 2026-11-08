@@ -258,7 +258,11 @@ function run_algorithm(
         apply!(sparse_chord(chord, pinset), residual, strength)
         push!(output, chord)
 
-        cfg.exclude_repeated_pins && filter!(c -> c != chord, pin2chords[pin])
+        # drop from both endpoints, else the chord stays reachable from its other pin
+        if cfg.exclude_repeated_pins
+            filter!(!=(chord), pin2chords[chord[1]])
+            filter!(!=(chord), pin2chords[chord[2]])
+        end
         stalled =
             step - last_restart >= MIN_RESTART_INTERVAL &&
             ema_gain < RESTART_RATIO * initial_gain
@@ -488,7 +492,7 @@ function plot_pins(input::GrayImage, cfg::Config)::GrayImage
         y = round(Int, imag(pin))
         lbx, ubx = clamp(x - LEN, 1, width), clamp(x + LEN, 1, width)
         lby, uby = clamp(y - LEN, 1, height), clamp(y + LEN, 1, height)
-        input[lbx:ubx, lby:uby] .= 0
+        input[lby:uby, lbx:ubx] .= 0  # M[row=y, col=x], matches raster
     end
     return input
 end
