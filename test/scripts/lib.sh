@@ -1,6 +1,6 @@
 # shellcheck shell=bash
-# Batch-sweep helpers — vendored in StringArt.jl and MonteCarloArt.jl.
-# Sync manually across both when editing. `just check-sync` fails on drift.
+# Batch-sweep helpers — vendored. Source of truth: ArtScaffold.jl/test/scripts/lib.sh.
+# Mirror edits manually across StringArt/MonteCarloArt/EdgeFlowArt (diff to check drift).
 #
 # On source: exports PROJECT_DIR, CORPUS_DIR, JULIA_BIN.
 # Caller then sets OUT_DIR (via `set_out_dir <subdir>`), JULIA_OPTS,

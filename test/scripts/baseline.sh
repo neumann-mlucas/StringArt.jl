@@ -11,7 +11,7 @@
 #      SIZE (default 512), PINS (default 240), STEPS (default 1500).
 
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-# shellcheck source-path=SCRIPTDIR source=lib.sh
+# shellcheck source-path=SCRIPTDIR source=lib.sh disable=SC1091
 source "${HERE}/lib.sh"
 
 PHASE="${PHASE:-pre-p1}"

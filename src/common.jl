@@ -1,6 +1,6 @@
 # common.jl — vendored shared utilities.
-# Kept in sync (by convention) between StringArt.jl/src/ and MonteCarloArt.jl/src/.
-# Edits in one must be mirrored to the other. `just check-sync` fails on drift.
+# Source of truth: ArtScaffold.jl/src/common.jl. Copied into StringArt.jl,
+# MonteCarloArt.jl, EdgeFlowArt.jl. Mirror edits manually (diff to check drift).
 
 using ArgParse
 using Clustering: kmeans
