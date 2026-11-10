@@ -10,8 +10,8 @@ using Images
 using Random
 
 function main()
-    Random.seed!(42)
     args = parse_cmd()
+    Random.seed!(args["seed"])
     StringArt.setup_logging(args)
 
     cfg, outputs, input_path = build_config(args)
@@ -70,6 +70,10 @@ function parse_cmd()
         "--exclude-repeated-pins"
         help = "skip chords already drawn (yields noisier / more diffuse output)"
         action = :store_true
+        "--seed"
+        help = "RNG seed (start pin, palette k-means)"
+        arg_type = Int
+        default = 42
     end
     parse_args(parser)
 end

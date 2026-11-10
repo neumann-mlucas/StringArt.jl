@@ -116,10 +116,10 @@ $ julia utils.jl -f plot_chords -i input.jpg -o chords.png
 ### Parameters
 
 ```bash
-usage: main.jl -i INPUT [-o OUTPUT] [-s SIZE] [--steps STEPS] [-v]
+usage: main.jl -i INPUT [-o OUTPUT] [--steps STEPS] [-v] [-s SIZE]
                [-n PINS] [--line-strength LINE-STRENGTH] [--rgb]
                [--custom-colors CUSTOM-COLORS] [--palette PALETTE]
-               [--exclude-repeated-pins] [-h]
+               [--exclude-repeated-pins] [--seed SEED] [-h]
 
 StringArt - Convert images to string art
 
@@ -128,11 +128,11 @@ optional arguments:
   -o, --output OUTPUT   output path with extension (.png/.svg/.gif);
                         comma-separate for multiple (default:
                         "output.png")
-  -s, --size SIZE       output canvas size in pixels (type: Int64,
-                        default: 512)
   --steps STEPS         algorithm iteration count (type: Int64,
                         default: 1000)
   -v, --verbose         verbose (debug) logging
+  -s, --size SIZE       output canvas size in pixels (type: Int64,
+                        default: 512)
   -n, --pins PINS       number of pins to use in canvas (type: Int64,
                         default: 180)
   --line-strength LINE-STRENGTH
@@ -149,6 +149,8 @@ optional arguments:
   --exclude-repeated-pins
                         skip chords already drawn (yields noisier /
                         more diffuse output)
+  --seed SEED           RNG seed (start pin, palette k-means) (type:
+                        Int64, default: 42)
   -h, --help            show this help message and exit
 
 Example: julia main.jl -i input.jpg -o output.png
